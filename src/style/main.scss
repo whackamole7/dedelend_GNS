@@ -1,0 +1,158 @@
+@import './vars.scss';
+@import './font.scss';
+
+* {
+	box-sizing: border-box
+}
+
+body {
+	min-height: calc(100vh + 1px);
+	font-family: 'Gantari', sans-serif;
+	font-size: 17px;
+	font-weight: 500;
+	line-height: calc(22.1/17);
+	color: $white;
+	background-color: $blue-3;
+	margin: 0;
+	padding-bottom: 40px;
+
+	&._scroll-lock {
+		height: 100%;
+		overflow: hidden;
+	}
+}
+
+main {
+	width: 100%;
+	padding: 45px 0;
+	
+	@media (max-width: 1300px) {
+		padding: 90px 0 45px;
+	}
+	
+	@media (max-width: 576px) {
+		padding: 90px 0 30px;
+	}
+
+	@media (max-width: 480px) {
+		padding: 80px 0 30px;
+	}
+}
+
+p {
+	color: $lgrey;
+	margin-bottom: 0.9em;
+	margin-top: 0.9em;
+}
+
+.text-inline {
+	a {
+		color: $lblue;
+	
+		&:visited {
+			color: $lblue;
+		}
+	}
+
+	p {
+		margin-top: 0.6em;
+		margin-bottom: 0.6em;
+	}
+}
+
+._container {
+	max-width: $width;
+	margin: 0 auto;
+
+	@media (max-width: calc($width + 40px)) {
+		padding-left: 20px;
+		padding-right: 20px;
+	}
+}
+
+._mobile-fluid {
+	@media (max-width: 480px) {
+		width: calc(100% + 40px)!important;
+		margin-left: -20px;
+		margin-right: -20px;
+		padding-left: 20px;
+		padding-right: 20px;
+	}
+}
+
+.nowrap {
+	white-space: nowrap;
+}
+
+h1,h2,h3,h4,h5,h6 {
+	margin-top: 0;
+}
+
+h1 {
+	font-size: 30px;
+	line-height: calc(39/30);
+	font-family: $title;
+	font-weight: 400;
+	margin-bottom: 1em;
+}
+h2 {
+	font-size: 20px;
+	font-weight: 500;
+	line-height: calc(26/20);
+	margin-bottom: 1em;
+}
+
+.block {
+	margin-bottom: 90px;
+
+	&__title {
+		font-size: 30px;
+		line-height: calc(39/30);
+		margin-bottom: 30px;
+	}
+
+	@media (max-width: 992px) {
+		margin-bottom: 60px;
+	}
+
+	@media (max-width: 768px) {
+		margin-bottom: 30px;
+	}
+
+	@media (max-width: 576px) {
+		&__title {
+			font-size: 25px;
+			line-height: calc(32.5/25);
+		}
+	}
+}
+
+ul {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+	margin-bottom: 15px;
+}
+li {
+	display: flex;
+	column-gap: 14.5px;
+	margin-bottom: 10px;
+	&:last-child {
+		margin-bottom: 0;
+	}
+	
+	&::before {
+		content: '';
+		position: relative;
+		top: .4em;
+		display: block;
+		flex-shrink: 0;
+		width: 8px;
+		height: 8px;
+		background-color: $lblue;
+		transform: rotate(45deg);
+	}
+}
+
+
+@import './ui.scss';

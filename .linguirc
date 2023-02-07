@@ -1,0 +1,28 @@
+{
+  "locales": [
+    "en",
+    "es",
+    "ko",
+    "ja",
+    "zh",
+    "ru",
+    "fr"
+  ],
+  "sourceLocale": "en",
+  "catalogs": [
+    {
+      "path": "src/views/gmx-test/config/locales/{locale}/messages",
+      "include": [
+        "src"
+      ]
+    }
+  ],
+  "formatOptions": {
+    "lineNumbers": false
+  },
+  "fallbackLocales": {
+    "default": "en"
+  },
+  "format": "po",
+  "orderBy": "messageId"
+}

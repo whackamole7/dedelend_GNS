@@ -1,0 +1,16 @@
+.GMX-Interface {
+	.Slippage {
+		&-row .Exchange-info-label {
+			font-size: 15px;
+			line-height: calc(19.5/15);
+		}
+	
+		&-input-container.Exchange-swap-section {
+			font-size: 15px;
+			line-height: calc(19.5/15);
+			padding: 12px 12px;
+			margin-bottom: 10px;
+		}
+	}
+}
+

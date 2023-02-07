@@ -1,0 +1,75 @@
+@import "../../../../style/vars.scss";
+
+.chart-token-selector {
+  display: flex!important;
+  align-items: center;
+  column-gap: 10px;
+  border: none!important;
+  white-space: nowrap;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 0!important;
+  padding-right: 0!important;
+
+  &--icon {
+    display: block;
+    width: 25px;
+    height: 25px;
+    transform: translateY(-1px);
+  }
+
+  &--name {
+    display: flex;
+    align-items: center;
+    column-gap: 10px;
+  }
+}
+
+.chart-token-selector--current {
+  font-size: 2.15rem;
+  font-weight: 700;
+  // margin-right: 1.9rem;
+  color: white;
+}
+
+.chart-token-menu {
+  position: relative;
+}
+
+.chart-token-menu-items.menu-items {
+  min-width: auto;
+  width: auto;
+  top: calc(100% + 5px);
+  right: 0;
+  left: unset;
+  background-color: #181A3C;
+  box-shadow: 3px 0 20px #060d21;
+  border: $border;
+  cursor: default;
+
+  @media (max-width: 768px) {
+    top: calc(100% + 10px);
+  }
+}
+
+.chart-token-menu-items .menu-item {
+  width: auto;
+  font-size: 17px;
+  line-height: calc(22.1/17);
+  font-weight: 500;
+  color: #a0a3c4;
+  cursor: pointer;
+  padding: 7px 15px;
+}
+
+.chart-token-menu-items .menu-item:hover {
+  color: #6988FF;
+  background-color: transparent!important;
+}
+
+.chart-token-menu-items .menu-item:first-child {
+  padding-top: 10px;
+}
+.chart-token-menu-items .menu-item:last-child {
+  padding-bottom: 10px;
+}

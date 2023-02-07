@@ -1,0 +1,75 @@
+.Tab.block {
+  display: grid;
+  grid-auto-flow: column;
+  column-gap: 1.3rem;
+  /* overflow: hidden; */
+  color: #384263;
+  /* background: linear-gradient(90deg, rgba(30, 34, 61, 0.9) 0%, rgba(38, 43, 71, 0.9) 100%); */
+  /* box-shadow: inset 0px 0px 30px 5px rgba(255, 255, 255, 0.01); */
+}
+
+.Tab-option-icon {
+  margin-left: 0.5rem;
+}
+
+.Tab.block .Tab-option {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border: 1px solid rgba(56, 66, 99, 0.2);
+  padding: 11.5px;
+  cursor: pointer;
+  border-radius: 5px;
+  background-color: #181A3C;
+  transition: all .2s ease;
+  /* font-size: 1.5rem; */
+}
+
+.Tab.block .Tab-option:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+.Tab.block .Tab-option.active {
+  opacity: 1;
+  pointer-events: none;
+  color: rgba(255, 255, 255, 1);
+  border-color: #6988FF;
+}
+
+.Tab.block .Tab-option.active .Tab-option-icon {
+  opacity: 1;
+}
+
+.Tab.inline .Tab-option {
+  cursor: pointer;
+  display: inline-block;
+  margin-right: 1.5rem;
+  font-size: 17px;
+  line-height: calc(22.1/17);
+  color: #747FA6;
+  opacity: 1;
+  transition: color .2s ease;
+}
+.Tab.inline .Tab-option:last-child {
+  margin-right: 0;
+}
+
+.Tab.inline .Tab-option:hover {
+  color: #fff;
+}
+
+.Tab.inline .Tab-option.active {
+  color: #fff;
+  pointer-events: none;
+}
+
+
+@media (max-width: 480px) {
+  .Tab.inline .Tab-option {
+    font-size: 15px;
+    line-height: calc(19.5/15);
+    margin-right: 1rem;
+  }
+}

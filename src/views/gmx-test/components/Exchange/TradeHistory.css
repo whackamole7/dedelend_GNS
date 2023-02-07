@@ -1,0 +1,38 @@
+.TradeHistory {
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.TradeHistory-row {
+  position: relative;
+  border-radius: 0!important;
+  padding: 1.5rem 2rem;
+}
+.TradeHistory-row::before {
+  content: '';
+  position: absolute;
+  left: 2rem;
+  right: 2rem;
+  bottom: 0;
+  height: 1px;
+  background-color: #181A3C;
+}
+
+.TradeHistory-row.Exchange-list-empty-note::before {
+  display: none;
+}
+
+.TradeHistory-row.App-box {
+  border-radius: 0;
+}
+
+.TradeHistory-time {
+  font-size: 15px;
+  line-height: calc(19.5/15);
+  color: #384263;
+  margin-bottom: 0.5rem;
+}
+
+.TradeHistory-row .plain {
+  color: #747FA6;
+}

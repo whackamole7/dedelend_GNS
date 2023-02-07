@@ -1,0 +1,48 @@
+.footer {
+	margin-top: auto;
+
+	&__content {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 30px;
+		border-top: 1px solid $blue-1;
+		padding-top: 30px;
+		padding-bottom: 60px;
+	}
+
+	&__smedia-items {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+	&__smedia-item {
+		display: inline-block;
+		line-height: 0;
+		
+		svg rect {
+			transition: all .2s ease;
+		}
+
+		&:hover, &:focus-visible {
+			svg rect {
+				fill: lighten($blue-1, 5)
+			}
+		}
+	}
+	
+	@media (max-width: 576px) {
+		&__content {
+			padding-top: 20px;
+			padding-bottom: 20px;
+		}
+
+		&__smedia-item {
+			svg {
+				width: 20px;
+				height: 20px;
+			}
+		}
+	}
+}
