@@ -1,0 +1,68 @@
+@import '../../../style/vars.scss';
+
+.ChooseMarket {
+	&__title {
+		margin-bottom: 15px;
+	}
+	
+	&__items {
+		display: flex;
+		flex-direction: column;
+		row-gap: 15px;
+	}
+
+	&__item {
+		position: relative;
+		background-color: $blue-1;
+		padding: 15px 20px;
+
+		&-header {
+			display: flex;
+			justify-content: space-between;
+			column-gap: 10px;
+			margin-bottom: 20px;
+		}
+		
+		&-name {
+			display: flex;
+			align-items: center;
+			column-gap: 7px;
+		}
+
+		&-checkbox {
+			position: static;
+			
+			label {
+				&::before {
+					margin-right: 0!important;
+				}
+			}
+		}
+
+		&-info .text-table__left {
+			font-size: 15px;
+			line-height: calc(19.5/15);
+		}
+	}
+
+	&__btn {
+		width: 100%;
+		margin-top: 15px;
+	}
+
+	@media (max-width: 480px) {
+		&__items {
+			row-gap: 10px;
+		}
+		
+		&__item {
+			padding: 10px 15px;
+
+
+			&-info .text-table__left, &-info .text-table__right {
+				font-size: 14px;
+				line-height: calc(18.2/14);
+			}
+		}
+	}
+}

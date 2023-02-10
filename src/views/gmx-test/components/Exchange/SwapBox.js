@@ -94,6 +94,7 @@ import { DDL_AccountManager, DDL_AccountManager_abi, USDC } from './../../../../
 import icon_repay from '../../../../img/icon-repay.svg';
 import icon_settings from '../../../../img/icon-settings.svg';
 import Modal from './../../../../components/UI/modal/Modal';
+import ChooseMarketModal from './../../../../components/UI/modal/ChooseMarketModal';
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -186,6 +187,29 @@ export default function SwapBox(props) {
     setRegisterVisible
   } = props;
 
+
+  // Markets list
+  const marketsList = [
+    {
+      name: 'GMX',
+      liq: 'dummy'
+    },
+    {
+      name: 'GNS',
+      liq: 'dummy'
+    },
+  ];
+  const [markets, setMarkets] = useLocalStorageByChainId(
+    chainId,
+    "Markets-Chosen",
+    marketsList.reduce((result, market) => {
+      if (typeof result === 'object') {
+        result = result.name;
+      }
+      return result + ' ' + market.name;
+    })
+  );
+  
   // Modal functionality
   const [modal, setModal] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -193,13 +217,13 @@ export default function SwapBox(props) {
     switch(modal) {
       case 'Choose-Market':
         return (
-          <Modal
-            className="ChooseMarket"
+          <ChooseMarketModal
             visible={modalVisible}
             setVisible={setModalVisible}
-          >
-            <div>CHOOSE MARKETS</div>
-          </Modal>
+            marketsList={marketsList}
+            markets={markets}
+            setMarkets={setMarkets}
+          />
         )
       default:
         return (
@@ -1130,44 +1154,34 @@ export default function SwapBox(props) {
 
   const isPrimaryEnabled = () => {
     if (IS_NETWORK_DISABLED[chainId]) {
-      console.log('1');
       return false;
     }
     if (isStopOrder) {
-      console.log('2');
       return true;
     }
     if (!active) {
-      console.log('3');
       return true;
     }
     const [error, modal] = getError();
     if (error && !modal) {
-      console.log('4');
       return false;
     }
     if (needOrderBookApproval && isWaitingForPluginApproval) {
-      console.log('5');
       return false;
     }
     if ((needApproval && isWaitingForApproval) || isApproving) {
-      console.log('6');
       return false;
     }
     if (needPositionRouterApproval && isWaitingForPositionRouterApproval) {
-      console.log('7');
       return false;
     }
     if (isPositionRouterApproving) {
-      console.log('8');
       return false;
     }
     if (isApproving) {
-      console.log('9');
       return false;
     }
     if (isSubmitting) {
-      console.log('10');
       return false;
     }
 
@@ -1895,7 +1909,7 @@ export default function SwapBox(props) {
         {active && <div className="Exchange-swap-account" >
         </div>}
       </div> */}
-      <div className="Exchange-swap-box-inner App-box-highlight">
+      <div className="Exchange-swap-box-inner App-box">
         <div>
           <div className="Exchange-swap-box__settings">
             <Tab
@@ -1924,10 +1938,6 @@ export default function SwapBox(props) {
                 option={orderOption}
                 onChange={onOrderOptionChange}
               />
-              <button className="btn_inline">
-                <img className="btn__icon" src={icon_repay} alt="Repay icon" />
-                Repay
-              </button>
             </div>
             
           )}
