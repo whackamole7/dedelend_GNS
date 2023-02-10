@@ -1,0 +1,332 @@
+@import "../../../../style/vars.scss";
+
+
+.Tooltip {
+  position: relative;
+
+  &__text {
+    font-size: 13px;
+    line-height: calc(16.9/13);
+  }
+}
+
+.Tooltip-popup {
+  position: absolute;
+  top: calc(100% + 0.8rem);
+  z-index: 1000;
+  min-width: 22.8rem;
+  font-size: 13px;
+  line-height: calc(16.9/13);
+  text-align: center;
+  color: #747FA6;
+  border-radius: 5px;
+  background: #181A3C;
+  border: 1px solid rgba(56, 66, 99, 0.2);
+  cursor: default;
+  padding: 1.2rem 1rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    z-index: -1;
+    width: 25px;
+    height: 18px;
+    background-color: $blue-1;
+    border-radius: 5px;
+    border: $border;
+    transform: rotate(58deg) skew(25deg);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: -1;
+    border-radius: 5px;
+    background-color: $blue-1;
+  }
+}
+
+.Tooltip-popup.right-bottom::before {
+  right: 17px;
+}
+.Tooltip-popup.left-bottom::before {
+  left: 18px;
+}
+
+
+.Tooltip.nowrap .Tooltip-popup {
+  min-width: auto;
+  white-space: nowrap;
+}
+
+.Tooltip-popup :first-child {
+  margin-top: 0;
+}
+
+.Tooltip-popup :last-child {
+  margin-bottom: 0;
+}
+
+.Tooltip-popup.left-bottom {
+  left: 0;
+}
+
+.Tooltip-popup.right-bottom {
+  right: -20px;
+}
+
+.Tooltip.collateral-locked-icon .Tooltip-popup.right-bottom {
+  right: -100%;
+}
+
+.Tooltip-popup.right-top {
+  right: 0;
+  transform: translateY(-0.8rem);
+  bottom: 100%;
+}
+.Tooltip-popup.right {
+  left: 3rem;
+  transform: translateY(50%);
+  bottom: 100%;
+}
+
+.Tooltip-popup.left-top {
+  left: 0;
+  transform: translateY(-0.8rem);
+  bottom: 100%;
+}
+
+.Tooltip-popup.center-bottom {
+  left: 50%;
+  transform: translateY(0.8rem) translateX(-50%);
+  top: 100%;
+}
+
+.Tooltip-popup.center-top {
+  left: 50%;
+  transform: translateY(-0.8rem) translateX(-50%);
+  bottom: 100%;
+}
+
+.Tooltip-handle {
+  /* cursor: help; */
+  position: relative;
+  display: inline-flex;
+  /* text-decoration: underline; */
+  text-decoration-style: dashed;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(255, 255, 255, 0.6);
+}
+
+.Tooltip-handle.plain:after {
+  border-bottom: none;
+}
+
+.Tooltip.no-underline .Tooltip-handle::after {
+  content: unset;
+}
+
+.Tooltip-divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.45);
+  margin: 0.5rem 0;
+}
+
+.Tooltip-row {
+  display: grid;
+  margin: 0 0 0.5rem 0;
+  grid-template-columns: 1fr auto;
+}
+
+.Tooltip-row > span.label {
+  margin-right: 0.5rem;
+}
+.Tooltip-row > .Tooltip-row-value {
+  color: white;
+  text-align: right;
+}
+
+.Tooltip-row-values {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.Tooltip-row-values li {
+  padding: 0.25rem 0 0 0;
+  text-align: right;
+}
+
+.Tooltip-number {
+  color: white;
+}
+
+@media (max-width: 700px) {
+  .Tooltip-row {
+    display: block;
+    margin-bottom: 1rem;
+  }
+  .Tooltip-row > span.label {
+    display: block;
+  }
+  .Tooltip-row-values li {
+    text-align: left;
+  }
+  .Tooltip-popup {
+    min-width: 20rem;
+  }
+  .Tooltip-row > .Tooltip-row-value {
+    text-align: left;
+  }
+}
+
+
+
+/* Tooltip helper cls */
+.spacing {
+  letter-spacing: -0.1em;
+}
+.br-mobile {
+  display: none;
+  @media (max-width: 480px) {
+    display: block;
+  }
+}
+.br-desktop {
+  @media (max-width: 480px) {
+    display: none;
+  }
+}
+/* Tooltip helper cls end */
+
+/* Tooltip types */
+.btn-tooltip.App-button-option {
+  margin-right: 20px;
+}
+
+.btn-tooltip .Tooltip-popup {
+  // right: -5px;
+  // min-width: 263px;
+  top: calc(100% + 4px);
+  text-align: left;
+  cursor: default;
+
+  &::before {
+    left: 14px;
+  }
+
+  @media (max-width: 1300px) {
+    left: 0;
+    right: auto;
+
+    &::before {
+      right: auto;
+      left: 18px;
+    }
+  }
+}
+
+.btn-tooltip {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  height: 20px;
+  width: 50px;
+  cursor: not-allowed;
+
+  &.hidden {
+    display: none;
+  }
+}
+
+.has-hint-tooltip {
+  display: flex;
+  align-items: center;
+  
+  &::after {
+    content: '';
+    display: block;
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%2210%22%20viewBox%3D%220%200%2010%2010%22%20fill%3D%22none%22%3E%0A%3Cg%20clip-path%3D%22url%28%23clip0_1619_291%29%22%3E%0A%3Cpath%20d%3D%22M5%209.375C3.83968%209.375%202.72688%208.91406%201.90641%208.09359C1.08594%207.27312%200.625%206.16032%200.625%205C0.625%203.83968%201.08594%202.72688%201.90641%201.90641C2.72688%201.08594%203.83968%200.625%205%200.625C6.16032%200.625%207.27312%201.08594%208.09359%201.90641C8.91406%202.72688%209.375%203.83968%209.375%205C9.375%206.16032%208.91406%207.27312%208.09359%208.09359C7.27312%208.91406%206.16032%209.375%205%209.375ZM5%2010C6.32608%2010%207.59785%209.47322%208.53553%208.53553C9.47322%207.59785%2010%206.32608%2010%205C10%203.67392%209.47322%202.40215%208.53553%201.46447C7.59785%200.526784%206.32608%200%205%200C3.67392%200%202.40215%200.526784%201.46447%201.46447C0.526784%202.40215%200%203.67392%200%205C0%206.32608%200.526784%207.59785%201.46447%208.53553C2.40215%209.47322%203.67392%2010%205%2010Z%22%20fill%3D%22%23384263%22%2F%3E%0A%3Cpath%20d%3D%22M3.00016%203.52807C2.99915%203.54966%203.00302%203.57121%203.01154%203.59139C3.02006%203.61157%203.03304%203.62996%203.04969%203.64542C3.06634%203.66089%203.0863%203.6731%203.10835%203.68131C3.1304%203.68953%203.15407%203.69357%203.17791%203.69318H3.78641C3.88819%203.69318%203.96932%203.61765%203.9826%203.52607C4.04898%203.08757%204.38089%202.76805%204.97242%202.76805C5.47839%202.76805%205.94159%202.99733%205.94159%203.5488C5.94159%203.97326%205.66574%204.16845%205.22983%204.46524C4.73345%204.79211%204.34032%205.1738%204.36835%205.79345L4.37056%205.9385C4.37134%205.98236%204.3911%206.02418%204.4256%206.05494C4.4601%206.08571%204.50656%206.10295%204.55495%206.10294H5.15312C5.20203%206.10294%205.24893%206.08533%205.28351%206.054C5.31809%206.02266%205.33752%205.98015%205.33752%205.93583V5.86564C5.33752%205.3857%205.53887%205.24599%206.08246%204.87233C6.53164%204.56283%207%204.21925%207%203.49799C7%202.48797%206.05886%202%205.02847%202C4.09397%202%203.07023%202.39438%203.00016%203.52807ZM4.14855%207.38035C4.14855%207.73663%204.46202%208%204.8935%208C5.34268%208%205.65172%207.73663%205.65172%207.38035C5.65172%207.01136%205.34194%206.75201%204.89276%206.75201C4.46202%206.75201%204.14855%207.01136%204.14855%207.38035Z%22%20fill%3D%22%23384263%22%2F%3E%0A%3C%2Fg%3E%0A%3Cdefs%3E%0A%3CclipPath%20id%3D%22clip0_1619_291%22%3E%0A%3Crect%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22white%22%2F%3E%0A%3C%2FclipPath%3E%0A%3C%2Fdefs%3E%0A%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    margin-left: 5px;
+  }
+
+  .Tooltip-popup {
+    left: calc(100% - 36px);
+    text-align: left;
+  }
+}
+
+.tab-tooltip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  cursor: not-allowed;
+  .Tooltip-handle {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+  }
+
+  &-container {
+    position: relative;
+
+    .Tooltip-popup {
+      // width: 236px;
+      text-align: left;
+      box-shadow: 3px 0px 20px #060D21;
+      
+      @media (max-width: 1100px) {
+        right: auto!important;
+        left: 50%;
+        transform: translate(-50%, 0.8em);
+        text-align: center;
+
+        &::before {
+          position: absolute;
+          top: 8px;
+          left: calc(50% - 5px);
+          transform: rotate(58deg) skew(25deg) translateX(-50%);
+        }
+      }
+
+      @media (max-width: 480px) {
+        min-width: 0;
+        // width: 180px;
+      }
+    }
+    
+    .Tooltip-popup.right-bottom {
+      top: calc(100% - 7px);
+      right: 35%;
+    }
+  }
+}
+
+.cur-price-tooltip {
+  @media (max-width: 576px) {
+    .Tooltip-popup {
+      left: 50%;
+      transform: translateX(-50%);
+      &::before {
+        left: calc(50% - 12px);
+      }
+    }
+  }
+}
+/* Tooltip types end */

@@ -367,6 +367,10 @@
     & > div {
       position: relative;
       text-align: center;
+
+      .Tooltip {
+        justify-content: center;
+      }
     }
     & > div:not(:last-child)::after {
       content: '';

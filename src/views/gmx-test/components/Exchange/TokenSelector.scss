@@ -86,18 +86,19 @@
 }
 
 .TokenSelector-token-row {
-  width: calc(50% - 5px);
-  cursor: pointer;
   position: relative;
-  color: #747FA6;
-  border: $border;
-  background-color: #181A3C;
-  border-radius: 5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.8rem 1rem;
+  column-gap: 3px;
+  width: calc(50% - 5px);
+  color: #747FA6;
+  background-color: #181A3C;
+  border: $border;
+  border-radius: 5px;
   transition: all .2s ease;
+  cursor: pointer;
+  padding: 0.8rem 1rem;
 
   &.chosen::after {
     right: 11px;

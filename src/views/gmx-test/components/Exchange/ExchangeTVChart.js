@@ -21,6 +21,7 @@ import Tab from "../Tab/Tab";
 
 import { getTokens, getToken } from "../../config/Tokens";
 import ChartTokenSelector from "./ChartTokenSelector";
+import Tooltip from './../Tooltip/Tooltip';
 
 const PRICE_LINE_TEXT_WIDTH = 15;
 
@@ -444,8 +445,24 @@ export default function ExchangeTVChart(props) {
           <div className="ExchangeChart-stats-container">
             <div>
               <div className="ExchangeChart-info-label">
-                Current Price
+                <Tooltip
+                  className="has-hint-tooltip nowrap cur-price-tooltip"
+                  handle="Current Price"
+                  position="left-bottom"
+                  enabled={true}
+                  renderContent={() => {
+                    return (
+                      <div className="Tooltip__text">
+                        Asset price is taken from GMX
+                      </div>
+                    );
+                  }}
+                />
               </div>
+              
+              {/* <div className="ExchangeChart-info-label">
+                Current Price
+              </div> */}
               <div className="ExchangeChart-main-price">
                 ${chartToken.maxPrice && formatAmount(chartToken.maxPrice, USD_DECIMALS, 2, true)}
               </div>
