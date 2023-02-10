@@ -240,7 +240,7 @@ export default function SwapBox(props) {
   }
   const [leverageOption, setLeverageOption] = useLocalStorageSerializeKey(
     [chainId, "Exchange-swap-leverage-option"],
-    "20"
+    "2"
   );
   const [isLeverageSliderEnabled, setIsLeverageSliderEnabled] = useLocalStorageSerializeKey(
     [chainId, "Exchange-swap-leverage-slider-enabled"],
@@ -1109,34 +1109,44 @@ export default function SwapBox(props) {
 
   const isPrimaryEnabled = () => {
     if (IS_NETWORK_DISABLED[chainId]) {
+      console.log('1');
       return false;
     }
     if (isStopOrder) {
+      console.log('2');
       return true;
     }
     if (!active) {
+      console.log('3');
       return true;
     }
     const [error, modal] = getError();
     if (error && !modal) {
+      console.log('4');
       return false;
     }
     if (needOrderBookApproval && isWaitingForPluginApproval) {
+      console.log('5');
       return false;
     }
     if ((needApproval && isWaitingForApproval) || isApproving) {
+      console.log('6');
       return false;
     }
     if (needPositionRouterApproval && isWaitingForPositionRouterApproval) {
+      console.log('7');
       return false;
     }
     if (isPositionRouterApproving) {
+      console.log('8');
       return false;
     }
     if (isApproving) {
+      console.log('9');
       return false;
     }
     if (isSubmitting) {
+      console.log('10');
       return false;
     }
 
@@ -1806,6 +1816,20 @@ export default function SwapBox(props) {
     feeBps = feeBasisPoints;
   }
 
+  const leverageMarks = {
+    1.1: "1.1x",
+    5: "5x",
+    10: "10x",
+    15: "15x",
+    20: "20x",
+    25: "25x",
+    30: "30x",
+    35: "35x",
+    40: "40x",
+    45: "45x",
+    50: "50x",
+  };
+
   if (!fromToken || !toToken) {
     return null;
   }
@@ -2092,6 +2116,33 @@ export default function SwapBox(props) {
         )}
         {(isLong || isShort) && !isStopOrder && (
           <div className="Exchange-leverage-box">
+            <div className="Exchange-leverage-slider-settings">
+              <div>Leverage</div>
+              {(isLong || isShort) && hasLeverageOption && (
+                <div className="Exchange-leverage-value">
+                  {parseFloat(leverageOption).toFixed(2)}x
+                </div>
+              )}
+            </div>
+            {isLeverageSliderEnabled && (
+              <div
+                className={cx("Exchange-leverage-slider", "App-slider", {
+                  positive: isLong,
+                  negative: isShort,
+                })}
+              >
+                <Slider
+                  min={1.1}
+                  max={MAX_ALLOWED_LEVERAGE / BASIS_POINTS_DIVISOR}
+                  step={0.1}
+                  marks={leverageMarks}
+                  handle={leverageSliderHandle}
+                  onChange={(value) => setLeverageOption(value)}
+                  value={leverageOption}
+                  defaultValue={leverageOption}
+                />
+              </div>
+            )}
             {isShort && (
               <div className="Exchange-info-row Exchange-info-row_relative">
                 <div className="Exchange-info-label">

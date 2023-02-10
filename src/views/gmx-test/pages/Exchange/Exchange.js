@@ -932,45 +932,6 @@ export const Exchange = forwardRef((props, ref) => {
             shouldShowPaginationButtons={true}
           />
         )}
-        {listSection === 'Borrows' && (
-          <BorrowsList
-            positionsDataIsLoading={positionsDataIsLoading}
-            pendingPositions={pendingPositions}
-            setPendingPositions={setPendingPositions}
-            setListSection={setListSection}
-            setIsWaitingForPluginApproval={setIsWaitingForPluginApproval}
-            setIsWaitingForPositionRouterApproval={setIsWaitingForPositionRouterApproval}
-            approveOrderBook={approveOrderBook}
-            approvePositionRouter={approvePositionRouter}
-            isPluginApproving={isPluginApproving}
-            isPositionRouterApproving={isPositionRouterApproving}
-            isWaitingForPluginApproval={isWaitingForPluginApproval}
-            isWaitingForPositionRouterApproval={isWaitingForPositionRouterApproval}
-            orderBookApproved={orderBookApproved}
-            positionRouterApproved={positionRouterApproved}
-            positions={positions}
-            positionsMap={positionsMap}
-            infoTokens={infoTokens}
-            active={active}
-            account={account}
-            library={library}
-            pendingTxns={pendingTxns}
-            setPendingTxns={setPendingTxns}
-            flagOrdersEnabled={flagOrdersEnabled}
-            savedIsPnlInLeverage={savedIsPnlInLeverage}
-            chainId={chainId}
-            nativeTokenAddress={nativeTokenAddress}
-            setMarket={setMarket}
-            orders={orders}
-            showPnlAfterFees={savedShowPnlAfterFees}
-            minExecutionFee={minExecutionFee}
-            minExecutionFeeUSD={minExecutionFeeUSD}
-            minExecutionFeeErrorMessage={minExecutionFeeErrorMessage}
-            usdgSupply={usdgSupply}
-            totalTokenWeights={totalTokenWeights}
-            dgAddress={props.dgAddress}
-          />
-        )}
       </div>
     );
   };
