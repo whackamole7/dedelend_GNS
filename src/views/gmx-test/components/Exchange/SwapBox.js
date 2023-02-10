@@ -3,7 +3,7 @@ import Tooltip from "../Tooltip/Tooltip";
 import { t, Trans } from "@lingui/macro";
 import Slider, { SliderTooltip } from "rc-slider";
 import "rc-slider/assets/index.css";
-import "./SwapBox.css";
+import "./SwapBox.scss";
 
 import cx from "classnames";
 import useSWR from "swr";
@@ -91,10 +91,9 @@ import StatsTooltipRow from "../StatsTooltip/StatsTooltipRow";
 import { fetcher } from "../../lib/contracts/fetcher";
 import { callContract } from "../../lib/contracts/callContract";
 import { DDL_AccountManager, DDL_AccountManager_abi, USDC } from './../../../../components/utils/contracts';
-import Currency from './../../../../components/Currency';
-import NumberInput from './../../../../components/UI/input/NumberInput';
-import NumberInput_v2 from './../../../../components/UI/input/NumberInput_v2';
 import icon_repay from '../../../../img/icon-repay.svg';
+import icon_settings from '../../../../img/icon-settings.svg';
+import Modal from './../../../../components/UI/modal/Modal';
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -186,6 +185,28 @@ export default function SwapBox(props) {
     minExecutionFeeErrorMessage,
     setRegisterVisible
   } = props;
+
+  // Modal functionality
+  const [modal, setModal] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const renderModal = () => {
+    switch(modal) {
+      case 'Choose-Market':
+        return (
+          <Modal
+            className="ChooseMarket"
+            visible={modalVisible}
+            setVisible={setModalVisible}
+          >
+            <div>CHOOSE MARKETS</div>
+          </Modal>
+        )
+      default:
+        return (
+          <></>
+        )
+    }
+  }
 
   
 
@@ -1867,6 +1888,7 @@ export default function SwapBox(props) {
     return fromValue !== formatAmountFree(maxAvailableAmount, fromToken.decimals, fromToken.decimals);
   }
 
+
   return (
     <div className="Exchange-swap-box">
       {/* <div className="Exchange-swap-wallet-box App-box">
@@ -1875,13 +1897,23 @@ export default function SwapBox(props) {
       </div> */}
       <div className="Exchange-swap-box-inner App-box-highlight">
         <div>
-          <Tab
-            icons={SWAP_ICONS}
-            options={SWAP_OPTIONS}
-            option={swapOption}
-            onChange={onSwapOptionChange}
-            className={"Exchange-swap-option-tabs"}
-          />
+          <div className="Exchange-swap-box__settings">
+            <Tab
+              icons={SWAP_ICONS}
+              options={SWAP_OPTIONS}
+              option={swapOption}
+              onChange={onSwapOptionChange}
+              className={"Exchange-swap-option-tabs"}
+            />
+            <button className="btn Exchange-swap-box__settings-btn"
+              onClick={() => {
+                setModal('Choose-Market');
+                setModalVisible(true);
+              }}>
+              <img src={icon_settings} alt="Settings icon" />
+            </button>
+          </div>
+          
           {flagOrdersEnabled && (
             <div className="Tab-inline-container">
               <Tab
@@ -2537,6 +2569,7 @@ export default function SwapBox(props) {
           minExecutionFeeErrorMessage={minExecutionFeeErrorMessage}
         />
       )}
+      {renderModal()}
     </div>
   );
 }

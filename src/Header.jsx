@@ -28,20 +28,12 @@ import { OptManager, PriceProviderETH, PriceProviderBTC, DDL_AccountManager, get
 import { getGlobalStats, getUserStats, getOptionStats } from './components/utils/stats';
 import { useLocation } from 'react-router-dom';
 import Tabs from './components/Tabs';
-import RegisterModal from './components/UI/modal/RegisterModal';
-import { errAlert } from './components/utils/notifications';
-import AccountDroplist from './components/AccountDroplist';
 
 
 const Header = (props) => {
 	const {
 		walletAddress, 
-		setWalletAddress, 
-		account,
-		setAccount,
-		accounts,
-		registerVisible,
-		setRegisterVisible
+		setWalletAddress,
 	} = props;
 
 	const { setGlobalStats } = useContext(GlobalStatsContext)
@@ -209,10 +201,6 @@ const Header = (props) => {
 
 	const loc = useLocation();
 	const headerLinks = [
-		/* {
-			name: 'Options',
-			to: '/options',
-		}, */
 		{
 			name: 'Perpetual Aggregator',
 			to: '/aggregator',
@@ -223,7 +211,7 @@ const Header = (props) => {
 		},
 	]
 	headerLinks.find(link => {
-		link.isActive = loc.pathname.split('/')[1] === link.to.split('/')[1];
+		link.isActive = loc.pathname === link.to;
 		return link.isActive;
 	})
 

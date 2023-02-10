@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Routes, Route,	useLocation, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import BorrowMarket from '../views/markets/BorrowMarket';
 import SupplyMarket from '../views/markets/SupplyMarket';
 import Tabs from './Tabs';
@@ -9,19 +9,10 @@ import { ethers } from 'ethers';
 import GMXInterface from '../views/gmx-test/App/App';
 import { connectWallet } from './utils/wallet';
 import MarginAccount from '../views/MarginAccount';
+import { HOMEPAGE_HREF } from './utils/constants';
 
 
 const AppRouter = ({ walletAddress, setWalletAddress, dgAddress, setRegisterVisible, account }) => {
-	const loc = useLocation();
-	const navigate = useNavigate();
-
-	useEffect(() => {
-		if (loc.pathname === '/' || loc.pathname === "/app.html") {
-			navigate('/perpetuals');
-		}
-	}, [loc.pathname])
-
-
 	// Supply Market state
 	const {userStats} = useContext(UserStatsContext)
 	const [supplyStep, setSupplyStep] = useState(0)
@@ -66,6 +57,10 @@ const AppRouter = ({ walletAddress, setWalletAddress, dgAddress, setRegisterVisi
 						account={account}
 					/>
 				}
+			/>
+			<Route
+				path="*"
+				element={<Navigate to={HOMEPAGE_HREF} replace />}
 			/>
 		</Routes>
 	);

@@ -21,7 +21,7 @@ export default function Tab(props) {
   };
 
   return (
-    <div className={cx("Tab", type, className, disabled ? 'disabled' : '')}>
+    <div className={cx("Tab", type, className, disabled && 'disabled')}>
       {options.map((opt) => {
         const label = optionLabels && optionLabels[opt] ? optionLabels[opt] : opt;
         let disabledNode;

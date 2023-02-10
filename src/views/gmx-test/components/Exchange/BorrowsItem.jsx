@@ -13,7 +13,7 @@ import { Trans } from '@lingui/macro';
 import { ethers, BigNumber } from 'ethers';
 import { ADDRESS_ZERO } from '@uniswap/v3-sdk';
 import { separateThousands } from './../../../../components/utils/sepThousands';
-import { BORDER_COEF } from './../../lib/contracts/constants';
+import { APY, BORDER_COEF } from './../../../../components/utils/constants';
 
 const BorrowsItem = (props) => {
 	const {

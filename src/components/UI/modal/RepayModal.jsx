@@ -10,7 +10,7 @@ import { errAlert } from '../../utils/notifications';
 import { ethers } from "ethers";
 import { formatAmount, USD_DECIMALS } from './../../../views/gmx-test/lib/legacy';
 import { notifySuccess } from './../../utils/notifications';
-import { APY, BORDER_COEF } from './../../../views/gmx-test/lib/contracts/constants';
+import { APY, BORDER_COEF } from './../../utils/constants';
 
 
 const RepayModal = (props) => {

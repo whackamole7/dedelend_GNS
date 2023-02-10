@@ -60,6 +60,8 @@
   color: #a0a3c4;
   cursor: pointer;
   padding: 7px 15px;
+
+  transition: color .2s ease;
 }
 
 .chart-token-menu-items .menu-item:hover {

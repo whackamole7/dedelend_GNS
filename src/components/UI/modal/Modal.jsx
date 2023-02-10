@@ -1,12 +1,17 @@
 import React from 'react';
+import cx from 'classnames';
 
-const Modal = ({children, className, visible, setVisible, resetModal, isObligatory}) => {
-	const classes = ['modal', className]
-
+const Modal = (props) => {
+	const {
+		children, 
+		className, 
+		visible, 
+		setVisible, 
+		resetModal, 
+		isObligatory
+	} = props;
 	
-	if (visible) {
-		classes.push('active')
-	}
+	const classes = cx('modal', className, visible && 'active');
 
 	const closeModal = () => {
 		if (isObligatory) {
@@ -21,14 +26,14 @@ const Modal = ({children, className, visible, setVisible, resetModal, isObligato
 	}
 	
 	return (
-		<div className={classes.join(' ')} onMouseDown={closeModal}>
+		<div className={classes} onMouseDown={closeModal}>
 			<div className="modal__content-wrapper">
 				<div className="modal__content" onMouseDown={e => e.stopPropagation()}>
 					{children}
 				</div>
 			</div>
-			{isObligatory ?
-				"" : <button className="close-btn" onClick={closeModal}></button>}
+			{!isObligatory && 
+				<button className="close-btn" onClick={closeModal}></button>}
 		</div>
 	);
 };

@@ -1,0 +1,38 @@
+@import "../../../../style/vars.scss";
+
+.SwapBox-collateral-tooltip-text {
+  font-weight: normal;
+}
+
+.Exchange-swap-box {
+  &__settings {
+    display: flex;
+    column-gap: 13px;
+    margin-bottom: 1.5rem;
+    
+    &-btn {
+      min-width: auto;
+      line-height: 0;
+      background-color: $blue-05;
+      padding: 12.5px;
+
+      img {
+        transition: transform .35s ease-in-out;
+      }
+      &:not([disabled]):hover, &:focus-visible {
+        background-color: $blue-05;
+        img {
+          transform: rotate(-180deg);
+        }
+
+        &:active {
+          background-color: $blue-1;
+        }
+      }
+    }
+
+    .Tab {
+      flex-grow: 1;
+    }
+  }
+}

@@ -2,10 +2,8 @@
   display: grid;
   grid-auto-flow: column;
   column-gap: 1.3rem;
-  /* overflow: hidden; */
   color: #384263;
-  /* background: linear-gradient(90deg, rgba(30, 34, 61, 0.9) 0%, rgba(38, 43, 71, 0.9) 100%); */
-  /* box-shadow: inset 0px 0px 30px 5px rgba(255, 255, 255, 0.01); */
+  margin-bottom: 0;
 }
 
 .Tab-option-icon {
