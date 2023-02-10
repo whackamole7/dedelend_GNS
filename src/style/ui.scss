@@ -30,7 +30,7 @@ a {
 
 	transition: all .2s ease;
 
-	&:not(.disabled):hover, &:not(.disabled):focus-visible {
+	&:not([disabled]):hover, &:not([disabled]):focus-visible {
 		background-color: $lblue;
 	}
 
@@ -93,7 +93,7 @@ a {
 			transition-timing-function: cubic-bezier(0.2, 1, 0.3, 1);
 		}
 
-		&:not(.disabled):hover, &:not(.disabled):focus-visible {
+		&:not([disabled]):hover, &:not([disabled]):focus-visible {
 			background-color: $blue-1;
 			box-shadow: none;
 
@@ -145,7 +145,7 @@ a {
 			border-color: $lblue;
 		}
 		
-		&:not(.disabled):hover, &:not(.disabled):focus-visible {
+		&:not([disabled]):hover, &:not([disabled]):focus-visible {
 			background-color: $blue-1;
 			color: $white;
 		}
@@ -162,18 +162,18 @@ a {
 		border: 1px solid transparent;
 		padding: 13px 12px;
 		
-		&:not(.disabled):active {
+		&:not([disabled]):active {
 			background-color: $blue-1;
 			border-color: $lblue;
 		}
-		&:not(.disabled):hover, &:not(.disabled):focus-visible {
+		&:not([disabled]):hover, &:not([disabled]):focus-visible {
 			background-color: $blue-1;
 		}
 	}
 
 	&_stroke {
 		border: 1px solid $lblue;
-		transition: border-color .2s ease;
+		transition: border-color s2s ease;
 
 		&:hover, &:focus-visible {
 			background-color: $blue-1!important;
@@ -228,12 +228,11 @@ a {
 	}
 
 	/* Btn states */
-	&.disabled {
+	&[disabled] {
 		color: $grey;
-		cursor: default;
 	}
 
-	&:not(.disabled).highlighted {
+	&:not([disabled]).highlighted {
 		color: $white;
 		background-color: $lblue;
 

@@ -1,4 +1,8 @@
+@import "../../../../style/vars.scss";
+
+
 .TradeHistory {
+  border: $border;
   border-radius: 5px;
   overflow: hidden;
 }
@@ -7,15 +11,19 @@
   position: relative;
   border-radius: 0!important;
   padding: 1.5rem 2rem;
-}
-.TradeHistory-row::before {
-  content: '';
-  position: absolute;
-  left: 2rem;
-  right: 2rem;
-  bottom: 0;
-  height: 1px;
-  background-color: #181A3C;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 2rem;
+    right: 2rem;
+    bottom: 0;
+    height: 1px;
+    background-color: #181A3C;
+  }
+  &:last-child::before {
+    display: none;
+  }
 }
 
 .TradeHistory-row.Exchange-list-empty-note::before {

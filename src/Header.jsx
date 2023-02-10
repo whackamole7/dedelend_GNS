@@ -214,22 +214,12 @@ const Header = (props) => {
 			to: '/options',
 		}, */
 		{
-			name: 'Perpetuals',
-			to: '/perpetuals',
+			name: 'Perpetual Aggregator',
+			to: '/aggregator',
 		},
 		{
 			name: 'Earn',
 			to: '/earn',
-		},
-		{
-			name: 'Margin Account',
-			to: '/account',
-			isHidden: !account,
-		},
-		{
-			name: 'Old Version',
-			to: 'https://old.dedelend.co/',
-			isExternal: true,
 		},
 	]
 	headerLinks.find(link => {
@@ -247,45 +237,14 @@ const Header = (props) => {
 
 				<div className="Account-data">
 					{walletAddress ?
-						<>
-							{account ? 
-								<AccountDroplist
-									accounts={accounts}
-									account={account} />
-								:
-								<div className="account-btn-wrapper">
-									<Button className='account-btn' isMain={true} onClick={(e) => {
-										setAccount('0x0641bc55DDAb3b9636e82CbF87EDE3c3c533039d')
-									}}>
-										{window.outerWidth > 480 ?
-										'Create Margin Account      '
-										: 'Create Account      '}
-									</Button>
-								</div>
-								}
-							<Wallet address={walletAddress} 
-								setAddress={setWalletAddress}
-							/>
-						</>
+						<Wallet address={walletAddress} 
+							setAddress={setWalletAddress}
+						/>
 						:
 						<Button isMain={true} onClick={(e) => {
 							connectWallet(setWalletAddress)
 						}}>Connect wallet</Button>}
 				</div>
-
-				{loc.pathname.startsWith('/perpetuals') && (
-					<RegisterModal
-						visible={registerVisible}
-						setVisible={setRegisterVisible}
-						onRegisterClick={register}
-						onApproveClick={approveAll}
-						curStep={registerStep}
-						isLoading={registerLoading}
-						depositVal={depositVal}
-						setDepositVal={setDepositVal}
-						 />
-				)}
-				
 			</div>
 		</header>
 	);

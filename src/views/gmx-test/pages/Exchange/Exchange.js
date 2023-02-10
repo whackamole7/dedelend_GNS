@@ -60,7 +60,6 @@ import { getDgContract, DDL_GMX } from './../../../../components/utils/contracts
 import { ARBITRUM } from './../../lib/legacy';
 import Modal from './../../../../components/UI/modal/Modal';
 import Button from './../../../../components/UI/button/Button';
-import MarginLevel from './../../../../components/MarginLevel';
 
 
 const { AddressZero } = ethers.constants;
@@ -456,46 +455,8 @@ export const Exchange = forwardRef((props, ref) => {
   const tokens = getTokens(chainId);
   const stableTokens = tokens.filter((token) => token.isStable);
 
-  const [shortWarningState, setShortWarningState] = useState({
-    visible: false,
-    tokenSymbol: '...',
-    notShowAgain: false,
-  })
-  const setShortWarningVisible = (bool) => {
-    setShortWarningState({
-      ...shortWarningState,
-      visible: bool
-    })
-  }
-
-  function showShortWarning(tokenAddr) {
-    if (localStorage.getItem('Short-warning-show') === 'false') {
-      return;
-    }
-    const isStable = Boolean(stableTokens.find(token => token.address === tokenAddr));
-
-    if (isStable && tokenAddr !== USDC.address) {
-      const token = getToken(ARBITRUM, tokenAddr);
-      
-      setShortWarningState({
-        visible: true,
-        tokenSymbol: token.symbol
-      })
-    }
-  }
-
-  useEffect(() => {
-    if (swapOption === SHORT) {
-      showShortWarning(fromTokenAddress);
-    }
-  }, [swapOption])
-
   const setFromTokenAddress = useCallback(
     (selectedSwapOption, address) => {
-      if (selectedSwapOption === SHORT) {
-        showShortWarning(address);
-      }
-      
       const newTokenSelection = JSON.parse(JSON.stringify(tokenSelection));
       newTokenSelection[selectedSwapOption].from = address;
       setTokenSelection(newTokenSelection);
@@ -537,27 +498,10 @@ export const Exchange = forwardRef((props, ref) => {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isPendingConfirmation, setIsPendingConfirmation] = useState(false);
 
-  // const tokens = getTokens(chainId);
-
   const tokenAddresses = tokens.map((token) => token.address);
   const { data: tokenBalances } = useSWR(active && [active, chainId, readerAddress, "getTokenBalances", account], {
     fetcher: fetcher(library, Reader, [tokenAddresses]),
   });
-  
-  /* const { data: tokenBalancesDG } = useSWR(active && [active, chainId, readerAddress, "getTokenBalances", props.dgAddress], {
-    fetcher: fetcher(library, Reader, [tokenAddresses]),
-  });
-  const { infoTokens: infoTokensDG } = useInfoTokens(library, chainId, active, tokenBalancesDG);
-
-  const dgFundsAddresses = [];
-  Object.keys(infoTokensDG).forEach(address => {
-    if (infoTokensDG[address].balance?.gt(0)) {
-      dgFundsAddresses.push(address);
-    }
-  }) */
-  
-  // const dgHasFunds = Boolean(dgFundsAddresses.length && props.dgAddress);
-  const dgHasFunds = false;
 
   const { data: positionData, error: positionDataError } = useSWR(
     active && [active, chainId, readerAddress, "getPositions", vaultAddress, props.dgAddress || AddressZero],
@@ -632,31 +576,8 @@ export const Exchange = forwardRef((props, ref) => {
     account,
     pendingPositions,
     updatedPositions,
-    props.dgAddress
+    account,
   )
-
-  const [ethLongExists, setEthLongExists] = useState(false);
-  const [ethShortExists, setEthShortExists] = useState(false);
-
-  useEffect(() => {
-    const longPos = Boolean(positions.find(pos => {
-      return pos.isLong && pos.indexToken.symbol === "ETH";
-    }));
-    const shortPos = Boolean(positions.find(pos => {
-      return !pos.isLong && pos.indexToken.symbol === "ETH";
-    }));
-
-    if (longPos) {
-      setSwapOption(LONG)
-    }
-    if (shortPos) {
-      setSwapOption(SHORT)
-    }
-
-    setEthLongExists(longPos);
-    setEthShortExists(shortPos);
-  }, [positions.length])
-  
 
   useImperativeHandle(ref, () => ({
     onUpdatePosition(key, size, collateral, averagePrice, entryFundingRate, reserveAmount, realisedPnl) {
@@ -886,7 +807,7 @@ export const Exchange = forwardRef((props, ref) => {
       });
   };
 
-  const LIST_SECTIONS = ["Positions", /* flagOrdersEnabled ? "Orders" : undefined */, "Trades", "Borrows"].filter(Boolean);
+  const LIST_SECTIONS = ["Positions", flagOrdersEnabled ? "Orders" : undefined, "Trades"].filter(Boolean);
   let [listSection, setListSection] = useLocalStorageByChainId(chainId, "List-section-v2", LIST_SECTIONS[0]);
   const LIST_SECTIONS_LABELS = {
     Orders: orders.length ? `Orders (${orders.length})` : undefined,
@@ -1081,15 +1002,10 @@ export const Exchange = forwardRef((props, ref) => {
       <div className="Exchange-content">
         <div className="Exchange-left">
           {renderChart()}
-          {/* {dgHasFunds && 
-            <ReturnFundsBox dgAddress={props.dgAddress} tokenAddresses={dgFundsAddresses} />} */}
-          <div className="Exchange-lists large">{getListSection()}</div>
         </div>
         <div className="Exchange-right">
           <SwapBox
             positions={positions}
-            ethShortExists={ethShortExists}
-            ethLongExists={ethLongExists}
             pendingPositions={pendingPositions}
             setPendingPositions={setPendingPositions}
             setIsWaitingForPluginApproval={setIsWaitingForPluginApproval}
@@ -1138,41 +1054,10 @@ export const Exchange = forwardRef((props, ref) => {
             dgAddress={props.dgAddress}
             setRegisterVisible={props.setRegisterVisible}
           />
-          <MarginLevel />
         </div>
+        <div className="Exchange-lists large">{getListSection()}</div>
         <div className="Exchange-lists small">{getListSection()}</div>
       </div>
-      <Modal
-        className="modal_warning"
-        visible={shortWarningState.visible}
-        setVisible={setShortWarningVisible}>
-        <h1 className='modal__title'>Attention</h1>
-        <div className="modal__body">
-          <div className="modal__text">
-            <p>Please note that only USDC is allowed as collateral for short positions. DeDeLend will swap {shortWarningState.tokenSymbol} to USDC to open the short position.
-            <br />By clicking on the «Confirm» button you confirm that you have been advised of this.</p>
-          </div>
-          <div className="input-container modal__checkbox">
-						<input type="checkbox"
-              onChange={(e) => {
-                setShortWarningState({
-                  ...shortWarningState,
-                  notShowAgain: e.target.checked
-                })
-              }} />
-						<label>Don't show me this message again</label>
-					</div>
-          <Button btnActive={true} onClick={() => {
-            console.log(shortWarningState);
-            
-            if (shortWarningState.notShowAgain) {
-              localStorage.setItem('Short-warning-show', false);
-            }
-            setShortWarningVisible(false);
-          }}>Confirm</Button>
-        </div>
-      </Modal>
-      
     </div>
   );
 });

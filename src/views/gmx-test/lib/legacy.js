@@ -131,8 +131,7 @@ export const BORROW = "Borrow";
 
 // Market/limit orders disabling
 // export const LEVERAGE_ORDER_OPTIONS = [MARKET, LIMIT, STOP];
-// export const LEVERAGE_ORDER_OPTIONS = [MARKET, LIMIT];
-export const LEVERAGE_ORDER_OPTIONS = [BORROW, MARKET, LIMIT];
+export const LEVERAGE_ORDER_OPTIONS = [MARKET, LIMIT];
 
 export const SWAP_ORDER_OPTIONS = [MARKET, LIMIT];
 

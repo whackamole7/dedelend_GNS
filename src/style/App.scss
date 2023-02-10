@@ -326,6 +326,10 @@
 	border: $border;
 	padding: 30px;
 
+	&_no-border {
+		border: none;
+	}
+	
 	@media (max-width: 480px) {
 		padding: 20px;
 	}

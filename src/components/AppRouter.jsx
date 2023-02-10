@@ -46,7 +46,7 @@ const AppRouter = ({ walletAddress, setWalletAddress, dgAddress, setRegisterVisi
 				path="/options"
 				element={<BorrowMarket walletAddress={walletAddress} setWalletAddress={setWalletAddress} />} 
 			/> */}
-			<Route path="/perpetuals" element={
+			<Route path="/aggregator" element={
 				<GMXInterface
 					connectWallet={() => {
 						connectWallet(setWalletAddress)

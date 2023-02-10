@@ -31,7 +31,6 @@ export default function TokenSelector(props) {
     showNewCaret = false,
     getTokenState = () => ({ disabled: false, message: null }),
     disableBodyScrollLock,
-    curToken,
   } = props;
 
   const visibleTokens = tokens.filter((t) => !t.isTempHidden);
@@ -121,7 +120,7 @@ export default function TokenSelector(props) {
             return (
               <div
                 key={token.address}
-                className={cx("TokenSelector-token-row", token.symbol === curToken.symbol ? 'chosen' : '' , { disabled: tokenState.disabled })}
+                className={cx("TokenSelector-token-row", token.symbol === tokenInfo?.symbol ? 'chosen' : '' , { disabled: tokenState.disabled })}
                 onClick={() => !tokenState.disabled && onSelectToken(token)}
               >
                 {tokenState.disabled && tokenState.message && (

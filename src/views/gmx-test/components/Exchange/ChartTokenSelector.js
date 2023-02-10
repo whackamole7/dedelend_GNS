@@ -7,8 +7,6 @@ import "../AddressDropdown/AddressDropdown.css";
 import { getTokens, getWhitelistedTokens } from "../../config/Tokens";
 import { LONG, SHORT, SWAP } from "../../lib/legacy";
 import { ethers } from 'ethers';
-import icon_ETH from '../../../../img/icon-ETH.svg';
-import icon_BTC from '../../../../img/icon-BTC.svg';
 
 export default function ChartTokenSelector(props) {
   const { chainId, selectedToken, onSelectToken, swapOption } = props;
@@ -17,32 +15,8 @@ export default function ChartTokenSelector(props) {
   const isShort = swapOption === SHORT;
   const isSwap = swapOption === SWAP;
 
-  // Available tokens limitation
-  // let options = getTokens(chainId);
-  // const whitelistedTokens = getWhitelistedTokens(chainId);
-  let options = [
-    {
-      name: "Ethereum",
-      symbol: "ETH",
-      decimals: 18,
-      address: ethers.constants.AddressZero,
-      isNative: true,
-      isShortable: true,
-      imageUrl: "https://assets.coingecko.com/coins/images/279/small/ethereum.png?1595348880",
-      icon: icon_ETH,
-    },
-    {
-      name: "Bitcoin (WBTC)",
-      symbol: "BTC",
-      decimals: 8,
-      address: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
-      isShortable: true,
-      imageUrl: "https://assets.coingecko.com/coins/images/7598/thumb/wrapped_bitcoin_wbtc.png?1548822744",
-      icon: icon_BTC,
-    },
-  ]
-  const whitelistedTokens = options;
-
+  let options = getTokens(chainId);
+  const whitelistedTokens = getWhitelistedTokens(chainId);
 
   const indexTokens = whitelistedTokens.filter((token) => !token.isStable && !token.isWrapped);
   const shortableTokens = indexTokens.filter((token) => token.isShortable);
@@ -59,9 +33,10 @@ export default function ChartTokenSelector(props) {
   };
 
   const value = selectedToken;
-  const icon = options.find(opt => {
-    return opt.symbol === value.symbol;
-  })?.icon;
+  let icon;
+  if (value.symbol) {
+    icon = require("../../img/ddl/ic_" + value.symbol?.toLowerCase() + "_40.svg")?.default;
+  }
 
   return (
     <Menu>
@@ -81,21 +56,28 @@ export default function ChartTokenSelector(props) {
       </Menu.Button>
       <div className="chart-token-menu">
         <Menu.Items as="div" className="menu-items chart-token-menu-items divided">
-          {options.map((option, index) => (
-            <Menu.Item key={index}>
+          {options.map((option, index) => {
+            let tokenPopupImage;
+            try {
+              tokenPopupImage = require("../../img/ddl/ic_" + option.symbol.toLowerCase() + "_40.svg");
+            } catch (error) {
+              tokenPopupImage = require("../../img/ddl/ic_eth_40.svg");
+            }
+            
+            return (<Menu.Item key={index}>
               <div
                 className={"menu-item" + (option.symbol === value.symbol ? ' chosen' : '')}
                 onClick={() => {
                   onSelect(option);
                 }}
               >
-                <img src={option.icon} alt={option.symbol + ' icon'} className="token-icon" />
+                <img src={tokenPopupImage?.default} alt={option.symbol + ' icon'} className="token-icon" />
                 <span style={{ marginLeft: 7, marginRight: 35 }} className="token-label">
                   {option.symbol} / USD
                 </span>
               </div>
-            </Menu.Item>
-          ))}
+            </Menu.Item>)
+          })}
         </Menu.Items>
       </div>
     </Menu>

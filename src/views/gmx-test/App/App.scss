@@ -180,9 +180,6 @@
     background: #0D0F29;
     /* font-size: 1.5rem; */
   }
-  .App-box-border {
-    border: 1px solid rgba(152, 162, 198, 0.075);
-  }
   
   .App-card-bottom-placeholder {
     visibility: hidden;
@@ -2055,17 +2052,17 @@
 
 .chosen {
   position: relative;
+  display: flex;
+  justify-content: space-between;
   
   &::after {
     content: '';
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    right: 15px;
     width: 6px;
     height: 6px;
+    flex-shrink: 0;
     border-radius: 50%;
     background-color: $green;
+    margin-left: 3px;
   }
 }
 

@@ -19,7 +19,7 @@ import {
 import { useTrades, useLiquidationsData } from "../../domain/legacy";
 import { getContract } from "../../config/Addresses";
 
-import "./TradeHistory.css";
+import "./TradeHistory.scss";
 
 const { AddressZero } = ethers.constants;
 
@@ -86,9 +86,9 @@ export default function TradeHistory(props) {
     return pageIds[pageIndex];
   };
 
-  const { trades, updateTrades } = useTrades(chainId, props.dgAddress, props.forSingleAccount, getAfterId());
+  const { trades, updateTrades } = useTrades(chainId, account, props.forSingleAccount, getAfterId());
 
-  const liquidationsData = useLiquidationsData(chainId, props.dgAddress);
+  const liquidationsData = useLiquidationsData(chainId, account);
   const liquidationsDataMap = useMemo(() => {
     if (!liquidationsData) {
       return null;
@@ -448,7 +448,7 @@ export default function TradeHistory(props) {
 
   return (
     <div className="TradeHistory">
-      {tradesWithMessages.length === 0 && <div className="TradeHistory-row App-box Exchange-list-empty-note">No trades yet</div>}
+      {tradesWithMessages.length === 0 && <div className="TradeHistory-row App-box App-box_no-border Exchange-list-empty-note">No trades yet</div>}
       {tradesWithMessages.length > 0 &&
         tradesWithMessages.map((trade, index) => {
           const tradeData = trade.data;
@@ -461,14 +461,14 @@ export default function TradeHistory(props) {
           }
 
           return (
-            <div className="TradeHistory-row App-box App-box-border" key={index}>
+            <div className="TradeHistory-row App-box App-box_no-border" key={index}>
               <div>
                 <div className="muted TradeHistory-time">
                   {formatDateTime(tradeData.timestamp)}
-                  {(!props.dgAddress || props.dgAddress.length === 0) && (
+                  {(!account || account.length === 0) && (
                     <span>
                       {" "}
-                      (<Link to={`/actions/${tradeData.props.dgAddress}`}>{tradeData.props.dgAddress}</Link>)
+                      (<Link to={`/actions/${tradeData.account}`}>{tradeData.account}</Link>)
                     </span>
                   )}
                 </div>
@@ -479,7 +479,7 @@ export default function TradeHistory(props) {
             </div>
           );
         })}
-      {shouldShowPaginationButtons && (
+      {shouldShowPaginationButtons && trades && trades.length >= TRADES_PAGE_SIZE && (
         <div>
           {pageIndex > 0 && (
             <button className="App-button-option App-card-option" onClick={loadPrevPage}>

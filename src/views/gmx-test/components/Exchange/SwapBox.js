@@ -61,7 +61,6 @@ import {
   useLocalStorageSerializeKey,
   usePrevious,
   MAX_ALLOWED_LEVERAGE,
-  BORROW,
 } from "../../lib/legacy";
 import { getConstant } from "../../config/chains";
 import * as Api from "../../domain/legacy";
@@ -185,8 +184,6 @@ export default function SwapBox(props) {
     minExecutionFee,
     minExecutionFeeUSD,
     minExecutionFeeErrorMessage,
-    ethShortExists,
-    ethLongExists,
     setRegisterVisible
   } = props;
 
@@ -255,8 +252,7 @@ export default function SwapBox(props) {
   const [ordersToaOpen, setOrdersToaOpen] = useState(false);
 
   // Market/Limit orders disabling
-  let [orderOption, setOrderOption] = useLocalStorageSerializeKey([chainId, "Order-option"], BORROW);
-  // let [orderOption, setOrderOption] = useState(BORROW);
+  let [orderOption, setOrderOption] = useLocalStorageSerializeKey([chainId, "Order-option"], MARKET);
   
   if (!flagOrdersEnabled) {
     orderOption = MARKET;
@@ -267,9 +263,6 @@ export default function SwapBox(props) {
   };
 
   const isMarketOrder = orderOption === MARKET;
-  const isBorrow = orderOption === BORROW;
-
-  const [borrowValue, setBorrowValue] = useState(undefined);
 
   
   const orderOptions = isSwap ? SWAP_ORDER_OPTIONS : LEVERAGE_ORDER_OPTIONS;
@@ -301,48 +294,19 @@ export default function SwapBox(props) {
   
   // Tokens control
   const tokens = getTokens(chainId);
-  // const fromTokens = tokens;
-  const fromTokens = [
-    {
-      name: "USD Coin",
-      symbol: "USDC",
-      decimals: 6,
-      address: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
-      isStable: true,
-      imageUrl: "https://assets.coingecko.com/coins/images/6319/thumb/USD_Coin_icon.png?1547042389",
-    },
-  ]
+  const fromTokens = tokens;
 
   const stableTokens = tokens.filter((token) => token.isStable);
   const indexTokens = whitelistedTokens.filter((token) => !token.isStable && !token.isWrapped);
   const shortableTokens = indexTokens.filter((token) => token.isShortable);
 
-  // let toTokens = tokens;
-  let toTokens = [
-    {
-      name: "Ethereum",
-      symbol: "ETH",
-      decimals: 18,
-      address: ethers.constants.AddressZero,
-      isNative: true,
-      isShortable: true,
-      imageUrl: "https://assets.coingecko.com/coins/images/279/small/ethereum.png?1595348880",
-    },
-    {
-      name: "Bitcoin (WBTC)",
-      symbol: "BTC",
-      decimals: 8,
-      address: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
-      isShortable: true,
-      imageUrl: "https://assets.coingecko.com/coins/images/7598/thumb/wrapped_bitcoin_wbtc.png?1548822744",
-    },
-  ]
-  // if (isLong) {
-  //   toTokens = indexTokens;
-  // }
-  // if (isShort) {
-  //   toTokens = shortableTokens;
-  // }
+  let toTokens = tokens;
+  if (isLong) {
+    toTokens = indexTokens;
+  }
+  if (isShort) {
+    toTokens = shortableTokens;
+  }
 
   const needOrderBookApproval = !isMarketOrder && !orderBookApproved;
   const prevNeedOrderBookApproval = usePrevious(needOrderBookApproval);
@@ -1153,9 +1117,6 @@ export default function SwapBox(props) {
     if (!active) {
       return true;
     }
-    if (!props.dgAddress) {
-      return true;
-    }
     const [error, modal] = getError();
     if (error && !modal) {
       return false;
@@ -1189,9 +1150,6 @@ export default function SwapBox(props) {
     }
     if (!active) {
       return t`Connect Wallet`;
-    }
-    if (!props.dgAddress) {
-      return t`Create Trading Account`;
     }
     if (!isSupportedChain(chainId)) {
       return t`Incorrect Network`;
@@ -1751,10 +1709,6 @@ export default function SwapBox(props) {
       props.connectWallet();
       return;
     }
-    if (!props.dgAddress) {
-      setRegisterVisible(true);
-      return;
-    }
 
     if (needPositionRouterApproval) {
       approvePositionRouter({
@@ -1798,8 +1752,8 @@ export default function SwapBox(props) {
   };
 
   const isStopOrder = orderOption === STOP;
-  const showFromAndToSection = !isStopOrder && !isBorrow;
-  const showTriggerPriceSection = !isSwap && !isMarketOrder && !isStopOrder && !isBorrow;
+  const showFromAndToSection = !isStopOrder;
+  const showTriggerPriceSection = !isSwap && !isMarketOrder && !isStopOrder;
   const showTriggerRatioSection = isSwap && !isMarketOrder && !isStopOrder;
 
   let fees;
@@ -1900,32 +1854,7 @@ export default function SwapBox(props) {
           <Tab
             icons={SWAP_ICONS}
             options={SWAP_OPTIONS}
-            disabledList={[
-              {
-                label: "Long",
-                disabled: ethShortExists
-              },
-              {
-                label: "Short",
-                disabled: ethLongExists
-              }
-            ]}
-            disabledTooltip={
-              <Tooltip
-                className="tab-tooltip nowrap"
-                position="right-bottom"
-                enabled={true}
-                handle=""
-                renderContent={() => {
-                  return (
-                    <div>
-                      <span className='spacing'>Y</span>ou can't open<br className="br-mobile" /> a long/short position<br /> at the same time
-                    </div>
-                  );
-                }} />
-            }
-            disabled={isBorrow}
-            option={isBorrow ? undefined : swapOption}
+            option={swapOption}
             onChange={onSwapOptionChange}
             className={"Exchange-swap-option-tabs"}
           />
@@ -1938,26 +1867,6 @@ export default function SwapBox(props) {
                 type="inline"
                 option={orderOption}
                 onChange={onOrderOptionChange}
-                disabledList={[
-                  {
-                    label: "Limit",
-                    disabled: true
-                  },
-                ]}
-                disabledTooltip={
-                  <Tooltip
-                    className="tab-tooltip nowrap"
-                    position="right-bottom"
-                    enabled={true}
-                    handle=""
-                    renderContent={() => {
-                      return (
-                        <div>
-                          Limit orders will be added soon!
-                        </div>
-                      );
-                    }} />
-                }
               />
               <button className="btn_inline">
                 <img className="btn__icon" src={icon_repay} alt="Repay icon" />
@@ -2008,7 +1917,7 @@ export default function SwapBox(props) {
                 </div>
                 <div>
                   {/* Tokens control */}
-                  {/* <TokenSelector
+                  <TokenSelector
                     label="Pay"
                     chainId={chainId}
                     tokenAddress={fromTokenAddress}
@@ -2017,8 +1926,8 @@ export default function SwapBox(props) {
                     infoTokens={infoTokens}
                     showMintingCap={false}
                     showTokenImgInDropdown={true}
-                  /> */}
-                  <div className="TokenSelector-dummy">USDC</div>
+                  />
+                  {/* <div className="TokenSelector-dummy">USDC</div> */}
                 </div>
               </div>
             </div>
@@ -2069,7 +1978,6 @@ export default function SwapBox(props) {
                     tokens={toTokens}
                     infoTokens={infoTokens}
                     showTokenImgInDropdown={true}
-                    curToken={toToken}
                   />
                 </div>
               </div>
@@ -2182,55 +2090,9 @@ export default function SwapBox(props) {
             </ExchangeInfoRow>
           </div>
         )}
-        {(isLong || isShort) && !isStopOrder && !isBorrow && (
+        {(isLong || isShort) && !isStopOrder && (
           <div className="Exchange-leverage-box">
-            <div className="Buying-power">
-              <div className="Exchange-leverage-slider-settings">
-                <div>
-                  <Tooltip
-                    className="has-hint-tooltip nowrap"
-                    handle="Buying Power"
-                    position="left-bottom"
-                    enabled={true}
-                    renderContent={() => {
-                      return (
-                        <div>
-                          Amount of USDC you can spend <br />on opening new positions
-                        </div>
-                      );
-                    }}
-                  />
-                </div>
-                <div className="Buying-power__available">
-                  <div className="muted-dark">Available:</div>
-                  <Currency>1000000.33</Currency>
-                </div>
-              </div>
-              <div
-                className={cx("Exchange-leverage-slider", "App-slider", {
-                  positive: isLong,
-                  negative: isShort,
-                })}
-              >
-                <Slider
-                  min={0}
-                  max={100}
-                  step={10}
-                  // marks={leverageMarks}
-                  // handle={leverageSliderHandle}
-                  onChange={(value) => setLeverageOption(value)}
-                  value={leverageOption}
-                  defaultValue={leverageOption}
-                />
-              </div>
-              {(isLong || isShort) && hasLeverageOption && (
-                <div className="Exchange-leverage-value">
-                  {leverageOption}% of Buying Power
-                </div>
-              )}
-            </div>
-            
-            {/* {isShort && (
+            {isShort && (
               <div className="Exchange-info-row Exchange-info-row_relative">
                 <div className="Exchange-info-label">
                   <Trans>Collateral In</Trans>
@@ -2246,7 +2108,7 @@ export default function SwapBox(props) {
                     showTokenImgInDropdown={true}
                     disabled={false}
                   />
-                  USDC
+                  {/* USDC */}
                 </div>
               </div>
             )}
@@ -2276,7 +2138,7 @@ export default function SwapBox(props) {
                   />
                 </div>
               </div>
-            )} */}
+            )}
             <div className="Exchange-info-row">
               <div className="Exchange-info-label">
                 <Trans>Entry Price</Trans>
@@ -2292,7 +2154,7 @@ export default function SwapBox(props) {
                 {!nextAveragePrice && `-`}
               </div>
             </div>
-            {/* <div className="Exchange-info-row">
+            <div className="Exchange-info-row">
               <div className="Exchange-info-label">
                 <Trans>Liq. Price</Trans>
               </div>
@@ -2309,7 +2171,7 @@ export default function SwapBox(props) {
                 {!toAmount && displayLiquidationPrice && `-`}
                 {!displayLiquidationPrice && `-`}
               </div>
-            </div> */}
+            </div>
             <ExchangeInfoRow label="Fees">
               <div>
                 {!feesUsd && "-"}
@@ -2344,32 +2206,6 @@ export default function SwapBox(props) {
                 )}
               </div>
             </ExchangeInfoRow>
-          </div>
-        )}
-        {isBorrow && (
-          <div className="borrow-list">
-            <NumberInput_v2
-              placeholder="Amount" 
-              value={borrowValue}
-              setValue={setBorrowValue}
-              currency='USDC'
-            />
-            <div className="Exchange-info-row">
-              <div className="Exchange-info-label">
-                <Trans>Available:</Trans>
-              </div>
-              <div className="align-right">
-                <Currency>10000</Currency>
-              </div>
-            </div>
-            <div className="Exchange-info-row">
-              <div className="Exchange-info-label">
-                <Trans>Borrow APY: </Trans>
-              </div>
-              <div className="align-right">
-                5%
-              </div>
-            </div>
           </div>
         )}
         {isStopOrder && (

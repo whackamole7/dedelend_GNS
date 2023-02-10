@@ -1,20 +1,21 @@
 import React from 'react';
 import { Link } from "react-router-dom";
+import cx from 'classnames';
 
 const Tabs = ({className, links}) => {
-	const cls = [className, 'tabs']
+	const cls = cx(className, 'tabs');
 	
 	return (
-		<div className={cls.join(' ')}>
+		<div className={cls}>
 			{links.map((link) => {
 				if (link.isHidden) {
 					return;
 				}
 				
-				const linkCls = ['btn', 'btn_tab', link.isActive ? 'active' : '']
+				const linkCls = cx('btn', 'btn_tab', link.isActive && 'active');
 				const linkEl = link.isExternal ?
-					<a className={linkCls.join(' ')} target="_blank" rel="noreferrer" href={link.to}  key={link.to}>{link.name}</a>
-					: <Link to={link.to} className={linkCls.join(' ')} key={link.to}>{link.name}</Link>
+					<a className={linkCls} target="_blank" rel="noreferrer" href={link.to}  key={link.to}>{link.name}</a>
+					: <Link to={link.to} className={linkCls} key={link.to}>{link.name}</Link>
 				return (
 					linkEl
 				)
