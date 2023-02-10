@@ -335,6 +335,11 @@
 	}
 }
 
+.App-card {
+	background-color: $blue-2;
+	border: $border;
+}
+
 
 
 @import './block/Header.scss';

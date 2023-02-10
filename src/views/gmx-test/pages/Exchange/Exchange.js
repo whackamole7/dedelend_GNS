@@ -52,6 +52,7 @@ import Tab from "../../components/Tab/Tab";
 import Footer from "../../components/Footer/Footer";
 
 import "./Exchange.scss";
+import "../../components/Exchange/Exchange-lists.scss";
 import { fetcher } from "../../lib/contracts/fetcher";
 import BorrowsList from './../../components/Exchange/BorrowsList';
 import { DDL_AccountManager, USDC } from "../../../../components/utils/contracts";

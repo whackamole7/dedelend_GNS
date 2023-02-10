@@ -469,7 +469,7 @@ export default function OrdersList(props) {
 
   return (
     <React.Fragment>
-      <table className="Exchange-list Orders App-box App-box_no-border large">
+      <table className="Exchange-list Orders App-box large">
         <tbody>
           {renderHead()}
           {renderEmptyRow()}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { ethers } from "ethers";
 import { Link } from "react-router-dom";
 import Tooltip from "../../components/Tooltip/Tooltip";
+import cx from 'classnames';
 
 import {
   USD_DECIMALS,
