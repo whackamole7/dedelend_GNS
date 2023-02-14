@@ -93,7 +93,6 @@ import { callContract } from "../../lib/contracts/callContract";
 import { DDL_AccountManager, DDL_AccountManager_abi, USDC } from './../../../../components/utils/contracts';
 import icon_repay from '../../../../img/icon-repay.svg';
 import icon_settings from '../../../../img/icon-settings.svg';
-import Modal from './../../../../components/UI/modal/Modal';
 import ChooseMarketModal from './../../../../components/UI/modal/ChooseMarketModal';
 
 const SWAP_ICONS = {
@@ -186,51 +185,6 @@ export default function SwapBox(props) {
     minExecutionFeeErrorMessage,
     setRegisterVisible
   } = props;
-
-
-  // Markets list
-  const marketsList = [
-    {
-      name: 'GMX',
-      liq: 'dummy'
-    },
-    {
-      name: 'GNS',
-      liq: 'dummy'
-    },
-  ];
-  const [markets, setMarkets] = useLocalStorageByChainId(
-    chainId,
-    "Markets-Chosen",
-    marketsList.reduce((result, market) => {
-      if (typeof result === 'object') {
-        result = result.name;
-      }
-      return result + ' ' + market.name;
-    })
-  );
-  
-  // Modal functionality
-  const [modal, setModal] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
-  const renderModal = () => {
-    switch(modal) {
-      case 'Choose-Market':
-        return (
-          <ChooseMarketModal
-            visible={modalVisible}
-            setVisible={setModalVisible}
-            marketsList={marketsList}
-            markets={markets}
-            setMarkets={setMarkets}
-          />
-        )
-      default:
-        return (
-          <></>
-        )
-    }
-  }
 
   
 
@@ -437,6 +391,58 @@ export default function SwapBox(props) {
       </div>
     );
   };
+
+  // Choosing Liquidity Source
+  const [market, setMarket] = useState(null);
+
+  function getLiquidity() {
+    return 'dummy';
+  }
+  // Markets list
+  const marketsList = [
+    {
+      name: 'GMX',
+      getLiq: () => {
+        return getLiquidity('GMX');
+      },
+    },
+    {
+      name: 'GNS',
+      getLiq: () => {
+        return getLiquidity('GNS');
+      },
+    },
+  ];
+  const [markets, setMarkets] = useLocalStorageByChainId(
+    chainId,
+    "Markets-Chosen",
+    marketsList
+  );
+  
+  // Modal functionality
+  const [modal, setModal] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const renderModal = () => {
+    switch(modal) {
+      case 'Choose-Market':
+        return (
+          <ChooseMarketModal
+            visible={modalVisible}
+            setVisible={setModalVisible}
+            marketsList={marketsList}
+            markets={markets}
+            setMarkets={setMarkets}
+          />
+        )
+      default:
+        return (
+          <></>
+        )
+    }
+  }
+
+
+  
 
   const fromBalance = fromTokenInfo ? fromTokenInfo.balance : bigNumberify(0);
   const toBalance = toTokenInfo ? toTokenInfo.balance : bigNumberify(0);
@@ -2382,115 +2388,10 @@ export default function SwapBox(props) {
           )}
         </div>
       )}
-      {/* (isLong || isShort) && (
+      {(isLong || isShort) && (
         <div className="Exchange-swap-market-box App-box App-box-border">
           <div className="Exchange-swap-market-box-title">
             {isLong ? "Long" : "Short"}&nbsp;{toToken.symbol}
-          </div>
-          <div className="App-card-divider"></div>
-          <div className="Exchange-info-row">
-            <div className="Exchange-info-label">
-              <Trans>Entry Price</Trans>
-            </div>
-            <div className="align-right">
-              <Tooltip
-                handle={`$${formatAmount(entryMarkPrice, USD_DECIMALS, 2, true)}`}
-                position="right-bottom"
-                renderContent={() => {
-                  return (
-                    <div>
-                      The position will be opened at {formatAmount(entryMarkPrice, USD_DECIMALS, 2, true)} USD with a
-                      max slippage of {parseFloat(savedSlippageAmount / 100.0).toFixed(2)}%.
-                      <br />
-                      <br />
-                      The slippage amount can be configured under Settings, found by clicking on your address at the top
-                      right of the page after connecting your wallet.
-                      <br />
-                      <br />
-                      <a
-                        href="https://gmxio.gitbook.io/gmx/trading#opening-a-position"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        More Info
-                      </a>
-                    </div>
-                  );
-                }}
-              />
-            </div>
-          </div>
-          <div className="Exchange-info-row">
-            <div className="Exchange-info-label">
-              <Trans>Exit Price</Trans>
-            </div>
-            <div className="align-right">
-              <Tooltip
-                handle={`$${formatAmount(exitMarkPrice, USD_DECIMALS, 2, true)}`}
-                position="right-bottom"
-                renderContent={() => {
-                  return (
-                    <div>
-                      If you have an existing position, the position will be closed at{" "}
-                      {formatAmount(entryMarkPrice, USD_DECIMALS, 2, true)} USD.
-                      <br />
-                      <br />
-                      This exit price will change with the price of the asset.
-                      <br />
-                      <br />
-                      <a
-                        href="https://gmxio.gitbook.io/gmx/trading#opening-a-position"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        More Info
-                      </a>
-                    </div>
-                  );
-                }}
-              />
-            </div>
-          </div>
-          <div className="Exchange-info-row">
-            <div className="Exchange-info-label">
-              <Trans>Borrow Fee</Trans>
-            </div>
-            <div className="align-right">
-              <Tooltip
-                handle={borrowFeeText}
-                position="right-bottom"
-                renderContent={() => {
-                  return (
-                    <div>
-                      {hasZeroBorrowFee && (
-                        <div>
-                          {isLong && "There are more shorts than longs, borrow fees for longing is currently zero"}
-                          {isShort && "There are more longs than shorts, borrow fees for shorting is currently zero"}
-                        </div>
-                      )}
-                      {!hasZeroBorrowFee && (
-                        <div>
-                          The borrow fee is calculated as (assets borrowed) / (total assets in pool) * 0.01% per hour.
-                          <br />
-                          <br />
-                          {isShort && `You can change the "Collateral In" token above to find lower fees`}
-                        </div>
-                      )}
-                      <br />
-                      <a
-                        href="https://gmxio.gitbook.io/gmx/trading#opening-a-position"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        More Info
-                      </a>
-                    </div>
-                  );
-                }}
-              >
-                {!hasZeroBorrowFee && null}
-              </Tooltip>
-            </div>
           </div>
           {renderAvailableLongLiquidity()}
           {isShort && toTokenInfo.hasMaxAvailableShort && (
@@ -2521,7 +2422,7 @@ export default function SwapBox(props) {
             </div>
           )}
         </div>
-      ) */}
+      )}
       <NoLiquidityErrorModal
         chainId={chainId}
         fromToken={fromToken}

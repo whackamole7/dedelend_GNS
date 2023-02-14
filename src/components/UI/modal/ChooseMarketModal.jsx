@@ -41,14 +41,13 @@ const ChooseMarketModal = (props) => {
 									<div className="ChooseMarket__item-checkbox input-container">
 										<input 
 											type="checkbox" 
-											defaultChecked={markets?.includes(market.name)} 
+											defaultChecked={!!markets?.find((el) => el.name === market.name)} 
 											onChange={(e) => {
 												if (e.target.checked) {
-													setDraftMarkets(cx(draftMarkets.trim(), market.name));
+													draftMarkets.push(market);
 												} else {
-													let result = draftMarkets.replace(market.name, '');
-
-													setDraftMarkets(result);
+													const index = draftMarkets.findIndex(el => el.name === market.name);
+													draftMarkets.splice(index, 1);
 												}
 											}}
 										/>
@@ -61,7 +60,7 @@ const ChooseMarketModal = (props) => {
 											Available Liquidity
 										</div>
 										<div className="text-table__right">
-											{market.liq}
+											{market.getLiq()}
 										</div>
 									</div>
 								</div>
@@ -73,7 +72,7 @@ const ChooseMarketModal = (props) => {
 			<button 
 				className="ChooseMarket__btn btn btn_hlight"
 				onClick={() => {
-					setMarkets(draftMarkets.trim());
+					setMarkets(draftMarkets);
 					setVisible(false);
 				}}
 			>

@@ -3,8 +3,6 @@ import { Trans, t } from "@lingui/macro";
 import { useWeb3React } from "@web3-react/core";
 import useSWR from "swr";
 import { ethers } from "ethers";
-import cx from "classnames";
-import { BigNumber } from "ethers";
 
 import {
   FUNDING_RATE_PRECISION,
@@ -40,7 +38,6 @@ import VaultV2 from "../../abis/VaultV2.json";
 import Router from "../../abis/Router.json";
 import Token from "../../abis/Token.json";
 
-import Checkbox from "../../components/Checkbox/Checkbox";
 import SwapBox from "../../components/Exchange/SwapBox";
 import ExchangeTVChart, { getChartToken } from "../../components/Exchange/ExchangeTVChart";
 import PositionsList from "../../components/Exchange/PositionsList";
@@ -49,18 +46,11 @@ import TradeHistory from "../../components/Exchange/TradeHistory";
 import ExchangeWalletTokens from "../../components/Exchange/ExchangeWalletTokens";
 import ExchangeBanner from "../../components/Exchange/ExchangeBanner";
 import Tab from "../../components/Tab/Tab";
-import Footer from "../../components/Footer/Footer";
 
 import "./Exchange.scss";
 import "../../components/Exchange/Exchange-lists.scss";
 import { fetcher } from "../../lib/contracts/fetcher";
-import BorrowsList from './../../components/Exchange/BorrowsList';
 import { DDL_AccountManager, USDC } from "../../../../components/utils/contracts";
-import ReturnFundsBox from './../../components/Exchange/ReturnFundsBox';
-import { getDgContract, DDL_GMX } from './../../../../components/utils/contracts';
-import { ARBITRUM } from './../../lib/legacy';
-import Modal from './../../../../components/UI/modal/Modal';
-import Button from './../../../../components/UI/button/Button';
 
 
 const { AddressZero } = ethers.constants;

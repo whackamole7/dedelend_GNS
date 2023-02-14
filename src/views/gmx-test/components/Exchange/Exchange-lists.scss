@@ -4,4 +4,8 @@
 .Exchange-lists {
 	grid-column: 1/3;
 	margin-top: -3rem;
+
+	@media (max-width: 1100px) {
+		grid-column: auto;
+	}
 }
