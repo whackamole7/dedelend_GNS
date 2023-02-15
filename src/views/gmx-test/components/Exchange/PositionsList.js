@@ -25,10 +25,6 @@ import {
   DECREASE,
 } from "../../lib/legacy";
 import PositionShare from "./PositionShare";
-import PositionDropdown from "./PositionDropdown";
-import StatsTooltipRow from "../StatsTooltip/StatsTooltipRow";
-import CollateralLocked from './CollateralLocked';
-import { getDgContract, DDL_GMX, DDL_AccountManagerToken } from './../../../../components/utils/contracts';
 import PositionsItem from './PositionsItem';
 
 const getOrdersForPosition = (account, position, orders, nativeTokenAddress) => {
@@ -276,37 +272,10 @@ export default function PositionsList(props) {
                 <Trans>Position</Trans>
               </th>
               <th>
-                <Trans>Net Value</Trans>
+                <Trans>Size</Trans>
               </th>
               <th>
-                <Tooltip
-                  className="has-hint-tooltip nowrap"
-                  handle="IM"
-                  position="left-bottom"
-                  enabled={true}
-                  renderContent={() => {
-                    return (
-                      <div>
-                        The margin reserved for your <br />open positions and open orders
-                      </div>
-                    );
-                  }}
-                />
-              </th>
-              <th>
-                <Tooltip
-                  className="has-hint-tooltip nowrap"
-                  handle="MM"
-                  position="left-bottom"
-                  enabled={true}
-                  renderContent={() => {
-                    return (
-                      <div>
-                        The margin required to maintain your current <br />positions. If your current margin balance falls <br />below Min. Maintenance Margin, your margin <br />account will be liquidated to repay the debt
-                      </div>
-                    );
-                  }}
-                />
+                <Trans>Collateral</Trans>
               </th>
               <th>
                 <Trans>Mark Price</Trans>
@@ -316,6 +285,15 @@ export default function PositionsList(props) {
               </th>
               <th>
                 <Trans>Liq. Price</Trans>
+              </th>
+              <th>
+                PNL (ROE %)
+              </th>
+              <th>
+                Stop Loss
+              </th>
+              <th>
+                Take Profit
               </th>
               <th></th>
             </tr>

@@ -91,7 +91,6 @@ import StatsTooltipRow from "../StatsTooltip/StatsTooltipRow";
 import { fetcher } from "../../lib/contracts/fetcher";
 import { callContract } from "../../lib/contracts/callContract";
 import { DDL_AccountManager, DDL_AccountManager_abi, USDC } from './../../../../components/utils/contracts';
-import icon_repay from '../../../../img/icon-repay.svg';
 import icon_settings from '../../../../img/icon-settings.svg';
 import ChooseMarketModal from './../../../../components/UI/modal/ChooseMarketModal';
 import { separateThousands } from './../../../../components/utils/sepThousands';

@@ -29,25 +29,8 @@ const PositionsItem = (props) => {
 		borrowFeeUSD,
 		editPosition,
 		sellPosition,
-		dgAddress,
 		isLarge,
 	} = props;
-
-	const [isLocked, setIsLocked] = useState(false);
-
-	useEffect(() => {
-		const DG = getDgContract(dgAddress);
-		if (!DG) {
-			return
-		}
-		DG.keyByIndexToken((position.indexToken.address === ADDRESS_ZERO ? WETH_address : position.indexToken.address), position.isLong)
-			.then(id => {
-				DDL_AccountManagerToken.ownerOf(id)
-					.then(owner => {
-						setIsLocked(owner === DDL_GMX.address);
-					});
-			})
-	}, [dgAddress, position])
 
 	return (
 		<>
@@ -66,59 +49,6 @@ const PositionsItem = (props) => {
 								{position.isLong ? "Long" : "Short"}
 							</span>
 						</div>
-					</td>
-					<td style={{width: 150, display: 'block'}}>
-						<div>
-							{!position.netValue && "Opening..."}
-							{position.netValue && (
-								<Tooltip
-									handle={`$${formatAmount(position.netValue, USD_DECIMALS, 2, true)}`}
-									position="left-bottom"
-									handleClassName="plain"
-									renderContent={() => {
-										return (
-											<>
-												Net Value:{" "}
-												{showPnlAfterFees
-													? t`Initial Collateral - Fees + PnL`
-													: t`Initial Collateral - Borrow Fee + PnL`}
-												<br />
-												<br />
-												<StatsTooltipRow
-													label={t`Initial Collateralt`}
-													value={formatAmount(position.collateral, USD_DECIMALS, 2, true)}
-												/>
-												<StatsTooltipRow label={`PnL`} value={position.deltaBeforeFeesStr} showDollar={false} />
-												<StatsTooltipRow
-													label={t`Borrow Fee`}
-													value={formatAmount(position.fundingFee, USD_DECIMALS, 2, true)}
-												/>
-												<StatsTooltipRow
-													label={`Open + Close fee`}
-													value={formatAmount(position.positionFee, USD_DECIMALS, 2, true)}
-												/>
-												<StatsTooltipRow
-													label={`PnL After Fees`}
-													value={`${position.deltaAfterFeesStr} (${position.deltaAfterFeesPercentageStr})`}
-													showDollar={false}
-												/>
-											</>
-										);
-									}}
-								/>
-							)}
-						</div>
-						{position.deltaStr && (
-							<div
-								className={cx("Exchange-list-info-label", {
-									positive: hasPositionProfit && positionDelta.gt(0),
-									negative: !hasPositionProfit && positionDelta.gt(0),
-									muted: positionDelta.eq(0),
-								})}
-							>
-								{position.deltaStr} ({position.deltaPercentageStr})
-							</div>
-						)}
 					</td>
 					<td>
 						<div>${formatAmount(position.size, USD_DECIMALS, 2, true)}</div>
@@ -228,45 +158,33 @@ const PositionsItem = (props) => {
 					}}>
 						${formatAmount(liquidationPrice, USD_DECIMALS, 2, true)}
 					</td>
+					<td>
+						<div style={{ width: 100, display: 'block' }}>
+							{position.deltaStr && (
+								<div
+									className={cx("Exchange-list-info-label", {
+										positive: hasPositionProfit && positionDelta.gt(0),
+										negative: !hasPositionProfit && positionDelta.gt(0),
+										muted: positionDelta.eq(0),
+									})}
+								>
+									{position.deltaStr} ({position.deltaPercentageStr})
+								</div>
+							)}
+						</div>
+						
+					</td>
+					<td>
 
-					<td className="td-btn pos-relative">
-						<Tooltip
-							className={"btn-tooltip nowrap" + (isLocked ? "" : " hidden")}
-							position="left-bottom"
-							enabled={true}
-							handle=""
-							renderContent={() => {
-								return (
-									<div>
-										Repay your debt to manage<br className='br-mobile' /> the position
-									</div>
-								);
-							}} />
-						<button
-							className="Exchange-list-action"
-							onClick={() => editPosition(position)}
-							disabled={position.size.eq(0) || isLocked}
-						>
-							Edit
-						</button>
+					</td>
+					<td>
+
 					</td>
 					<td className="td-btn pos-relative">
-						<Tooltip
-							className={"btn-tooltip nowrap" + (isLocked ? "" : " hidden")}
-							position="left-bottom"
-							enabled={true}
-							handle=""
-							renderContent={() => {
-								return (
-									<div>
-										Repay your debt to manage<br className='br-mobile' /> the position
-									</div>
-								);
-							}} />
 						<button
 							className="Exchange-list-action"
 							onClick={() => sellPosition(position)}
-							disabled={position.size.eq(0) || isLocked}
+							disabled={position.size.eq(0)}
 						>
 							Close
 						</button>
@@ -282,10 +200,6 @@ const PositionsItem = (props) => {
 								onPositionClick(position);
 							}}
 						/> */}
-					</td>
-					<td className="td-btn">
-						{isLocked &&
-							<CollateralLocked />}
 					</td>
 				</tr>
 			:
@@ -352,37 +266,13 @@ const PositionsItem = (props) => {
 					</div>
 					<div className="App-card-row">
 						<div className="label">
-							<Tooltip
-								className="has-hint-tooltip nowrap"
-								handle="IM"
-								position="left-bottom"
-								enabled={true}
-								renderContent={() => {
-									return (
-										<div>
-											The margin reserved for your <br />open positions and open orders
-										</div>
-									);
-								}}
-							/>
+							Size
 						</div>
 						<div>${formatAmount(position.size, USD_DECIMALS, 2, true)}</div>
 					</div>
 					<div className="App-card-row">
 						<div className="label">
-							<Tooltip
-								className="has-hint-tooltip nowrap"
-								handle="MM"
-								position="left-bottom"
-								enabled={true}
-								renderContent={() => {
-									return (
-										<div>
-											The margin required to maintain your current <br />positions. If your current margin balance falls <br />below Min. Maintenance Margin, your margin <br />account will be liquidated to repay the debt
-										</div>
-									);
-								}}
-							/>
+							Collteral
 						</div>
 						<div>
 							<Tooltip
@@ -438,53 +328,36 @@ const PositionsItem = (props) => {
 						</div>
 						<div>${formatAmount(liquidationPrice, USD_DECIMALS, 2, true)}</div>
 					</div>
+					<div className="App-card-row">
+						<div className="label">
+							PNL (ROE %)
+						</div>
+						<div>dummy</div>
+					</div>
+					<div className="App-card-row">
+						<div className="label">
+							Stop Loss
+						</div>
+						<div>dummy</div>
+					</div>
+					<div className="App-card-row">
+						<div className="label">
+							Take Profit
+						</div>
+						<div>dummy</div>
+					</div>
 				</div>
 				<div className="App-card-divider"></div>
 				<div className="App-card-options">
 					<div className="App-button-option pos-relative">
-						<Tooltip
-							className={"btn-tooltip nowrap" + (isLocked ? "" : " hidden")}
-							position="left-bottom"
-							enabled={true}
-							handle=""
-							renderContent={() => {
-								return (
-									<div>
-										Repay your debt to manage<br className='br-mobile' /> the position
-									</div>
-								);
-							}} />
 						<button
 							className="App-button-option App-card-option"
-							disabled={position.size.eq(0) || isLocked}
-							onClick={() => editPosition(position)}
-						>
-							<Trans>Edit</Trans>
-						</button>
-					</div>
-					<div className="App-button-option pos-relative">
-						<Tooltip
-							className={"btn-tooltip nowrap" + (isLocked ? "" : " hidden")}
-							position="left-bottom"
-							enabled={true}
-							handle=""
-							renderContent={() => {
-								return (
-									<div>
-										Repay your debt to manage<br className='br-mobile' /> the position
-									</div>
-								);
-							}} />
-						<button
-							className="App-button-option App-card-option"
-							disabled={position.size.eq(0) || isLocked}
+							disabled={position.size.eq(0)}
 							onClick={() => sellPosition(position)}
 						>
 							Close
 						</button>
 					</div>
-					{isLocked &&
-						<CollateralLocked />}
 				</div>
 			</div>}
 		</>

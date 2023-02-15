@@ -1232,13 +1232,6 @@
   }
   
   @media (max-width: 1300px) {
-    .Exchange-list.large {
-      display: none;
-    }
-  
-    .Exchange-list.small {
-      display: table;
-    }
     .Exchange-list-leverage {
       color: #747FA6;
     }
@@ -1272,6 +1265,13 @@
   
   
   @media (max-width: 1100px) {
+    .Exchange-list.large {
+      display: none;
+    }
+    .Exchange-list.small {
+      display: table;
+    }
+    
     .Exchange-swap-box {
       width: auto;
     }

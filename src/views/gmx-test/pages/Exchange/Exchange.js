@@ -505,7 +505,7 @@ export const Exchange = forwardRef((props, ref) => {
   });
 
   const { data: positionData, error: positionDataError } = useSWR(
-    active && [active, chainId, readerAddress, "getPositions", vaultAddress, props.dgAddress || AddressZero],
+    active && [active, chainId, readerAddress, "getPositions", vaultAddress, account],
     {
       fetcher: fetcher(library, Reader, [
         positionQuery.collateralTokens,
@@ -733,7 +733,7 @@ export const Exchange = forwardRef((props, ref) => {
   }));
 
   const flagOrdersEnabled = true;
-  const [orders] = useAccountOrders(flagOrdersEnabled, props.dgAddress);
+  const [orders] = useAccountOrders(flagOrdersEnabled, account);
 
   const [isWaitingForPluginApproval, setIsWaitingForPluginApproval] = useState(false);
   const [isWaitingForPositionRouterApproval, setIsWaitingForPositionRouterApproval] = useState(false);
@@ -900,7 +900,6 @@ export const Exchange = forwardRef((props, ref) => {
             minExecutionFeeErrorMessage={minExecutionFeeErrorMessage}
             usdgSupply={usdgSupply}
             totalTokenWeights={totalTokenWeights}
-            dgAddress={props.dgAddress}
           />
         )}
         {listSection === "Orders" && (
@@ -924,7 +923,6 @@ export const Exchange = forwardRef((props, ref) => {
         {listSection === "Trades" && (
           <TradeHistory
             account={account}
-            dgAddress={props.dgAddress}
             forSingleAccount={true}
             infoTokens={infoTokens}
             getTokenInfo={getTokenInfo}
