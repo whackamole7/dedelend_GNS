@@ -94,6 +94,8 @@ import { DDL_AccountManager, DDL_AccountManager_abi, USDC } from './../../../../
 import icon_repay from '../../../../img/icon-repay.svg';
 import icon_settings from '../../../../img/icon-settings.svg';
 import ChooseMarketModal from './../../../../components/UI/modal/ChooseMarketModal';
+import { separateThousands } from './../../../../components/utils/sepThousands';
+import { floor } from './../../../../components/utils/math';
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -183,7 +185,7 @@ export default function SwapBox(props) {
     minExecutionFee,
     minExecutionFeeUSD,
     minExecutionFeeErrorMessage,
-    setRegisterVisible
+    marketsList,
   } = props;
 
   
@@ -392,27 +394,32 @@ export default function SwapBox(props) {
     );
   };
 
-  // Choosing Liquidity Source
-  const [market, setMarket] = useState(null);
+  const getLiquidity = (marketName) => {
+    let value;
+    // let symbol = toTokenInfo.symbol;
+    
+    switch(marketName) {
+      case 'GMX':
 
-  function getLiquidity() {
-    return 'dummy';
+        if (isLong) {
+          value = toTokenInfo.maxAvailableLong / 10**USD_DECIMALS;
+        } else {
+          value = toTokenInfo.maxAvailableShort / 10**USD_DECIMALS;
+        }
+        break;
+      case 'GNS':
+        value = 2000;
+        break;
+      default:
+        return;
+    }
+
+    return {
+      value,
+      // symbol,
+      formattedValue: separateThousands(floor(value)),
+    }
   }
-  // Markets list
-  const marketsList = [
-    {
-      name: 'GMX',
-      getLiq: () => {
-        return getLiquidity('GMX');
-      },
-    },
-    {
-      name: 'GNS',
-      getLiq: () => {
-        return getLiquidity('GNS');
-      },
-    },
-  ];
   const [markets, setMarkets] = useLocalStorageByChainId(
     chainId,
     "Markets-Chosen",
@@ -432,6 +439,7 @@ export default function SwapBox(props) {
             marketsList={marketsList}
             markets={markets}
             setMarkets={setMarkets}
+            getLiq={getLiquidity}
           />
         )
       default:
@@ -441,6 +449,21 @@ export default function SwapBox(props) {
     }
   }
 
+  // Choosing Liquidity Source
+  const [suitableMarket, setSuitableMarket] = useState(null);
+  useEffect(() => {
+    if (!markets.length) {
+      setSuitableMarket(null);
+      return;
+    }
+
+    setSuitableMarket(markets.reduce((result, market) => {
+      if (getLiquidity(result.name).value > getLiquidity(market.name).value) {
+        return result;
+      }
+      return market;
+    }))
+  });
 
   
 
@@ -2191,6 +2214,43 @@ export default function SwapBox(props) {
                 />
               </div>
             )}
+            <div className="Exchange-info-row">
+              <div className="Exchange-info-label">
+                <Tooltip
+                  className="has-hint-tooltip nowrap"
+                  handle="Liquidity Source"
+                  position="left-bottom"
+                  enabled={true}
+                  renderContent={() => {
+                    return (
+                      <div className="Tooltip__text">
+                        DeDeLend will automatically <br />choose an appropriate <br />liquidity source
+                      </div>
+                    );
+                  }}
+                />
+              </div>
+              <div className="align-right icon-container">
+                <img
+                  src={
+                    suitableMarket &&
+                      require(`../../../../img/icon-${suitableMarket?.name}.svg`).default
+                  }
+                  alt={`${suitableMarket?.name} icon`}
+                />
+                {suitableMarket?.name}
+              </div>
+            </div>
+            <div className="Exchange-info-row">
+              <div className="Exchange-info-label">
+                Available Liquidity
+              </div>
+              <div className="align-right icon-container">
+                {suitableMarket && (
+                  '$' + getLiquidity(suitableMarket.name).formattedValue
+                )}
+              </div>
+            </div>
             {isShort && (
               <div className="Exchange-info-row Exchange-info-row_relative">
                 <div className="Exchange-info-label">
@@ -2331,7 +2391,7 @@ export default function SwapBox(props) {
           </button>
         </div>
       </div>
-      {isSwap && (
+      {/* {isSwap && (
         <div className="Exchange-swap-market-box App-box App-box-border">
           <div className="Exchange-swap-market-box-title">
             <Trans>Swap</Trans>
@@ -2422,7 +2482,7 @@ export default function SwapBox(props) {
             </div>
           )}
         </div>
-      )}
+      )} */}
       <NoLiquidityErrorModal
         chainId={chainId}
         fromToken={fromToken}

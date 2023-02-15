@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
 import './ChooseMarketModal.scss';
-import cx from 'classnames';
+import { useCallback, useEffect } from 'react';
 
 const ChooseMarketModal = (props) => {
 	const {
@@ -10,6 +10,7 @@ const ChooseMarketModal = (props) => {
 		marketsList,
 		setMarkets,
 		markets,
+		getLiq,
 	} = props;
 
 	const [draftMarkets, setDraftMarkets] = useState(markets);
@@ -19,6 +20,9 @@ const ChooseMarketModal = (props) => {
 			className="ChooseMarket"
 			visible={visible}
 			setVisible={setVisible}
+			resetModal={() => {
+				setMarkets(draftMarkets);
+			}}
 		>
 			<h1 className="ChooseMarket__title modal__title">
 				Choose Markets
@@ -27,6 +31,7 @@ const ChooseMarketModal = (props) => {
 				{
 					marketsList.map(market => {
 						const icon = require(`../../../img/icon-${market.name}.svg`).default;
+						const liqInfo = getLiq(market.name);
 
 						return (
 							<div
@@ -41,13 +46,13 @@ const ChooseMarketModal = (props) => {
 									<div className="ChooseMarket__item-checkbox input-container">
 										<input 
 											type="checkbox" 
-											defaultChecked={!!markets?.find((el) => el.name === market.name)} 
+											defaultChecked={!!draftMarkets?.find((el) => el.name === market.name)}
 											onChange={(e) => {
 												if (e.target.checked) {
 													draftMarkets.push(market);
 												} else {
 													const index = draftMarkets.findIndex(el => el.name === market.name);
-													draftMarkets.splice(index, 1);
+													draftMarkets.splice(index, 1)
 												}
 											}}
 										/>
@@ -60,7 +65,7 @@ const ChooseMarketModal = (props) => {
 											Available Liquidity
 										</div>
 										<div className="text-table__right">
-											{market.getLiq()}
+											${liqInfo.formattedValue}
 										</div>
 									</div>
 								</div>

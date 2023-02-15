@@ -53,6 +53,16 @@ import { fetcher } from "../../lib/contracts/fetcher";
 import { DDL_AccountManager, USDC } from "../../../../components/utils/contracts";
 
 
+// Markets list
+const marketsList = [
+  {
+    name: 'GMX',
+  },
+  {
+    name: 'GNS',
+  },
+];
+
 const { AddressZero } = ethers.constants;
 
 const PENDING_POSITION_VALID_DURATION = 600 * 1000;
@@ -1003,8 +1013,7 @@ export const Exchange = forwardRef((props, ref) => {
             minExecutionFee={minExecutionFee}
             minExecutionFeeUSD={minExecutionFeeUSD}
             minExecutionFeeErrorMessage={minExecutionFeeErrorMessage}
-            dgAddress={props.dgAddress}
-            setRegisterVisible={props.setRegisterVisible}
+            marketsList={marketsList}
           />
         </div>
         <div className="Exchange-lists large">{getListSection()}</div>

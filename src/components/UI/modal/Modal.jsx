@@ -18,10 +18,10 @@ const Modal = (props) => {
 			return;
 		}
 		
-		setVisible(false)
+		setVisible(false);
 		
 		if (resetModal) {
-			resetModal()
+			resetModal();
 		}
 	}
 	
