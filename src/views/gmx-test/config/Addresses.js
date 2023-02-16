@@ -108,8 +108,9 @@ const CONTRACTS = {
     Router: "0xaBBc5F99639c9B6bCb58544ddf04EFA6802F4064",
     VaultReader: "0xfebB9f4CAC4cD523598fE1C5771181440143F24A",
     Reader: "0x2b43c90D1B727cEe1Df34925bcd5Ace52Ec37694",
-    GlpManager: "0x321F653eED006AD1C29D174e17d96351BDe22649",
+    GlpManager: "0x3963FfC9dff443c2A94f21b129D429891E32ec18",
     RewardRouter: "0xA906F338CB21815cBc4Bc87ace9e68c87eF8d8F1",
+    GlpRewardRouter: "0xB95DB5B167D75e6d04227CfFFA61069348d271F5",
     RewardReader: "0x8BFb8e82Ee4569aee78D03235ff465Bd436D40E0",
     NATIVE_TOKEN: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
     GLP: "0x4277f8F2c384827B5273592FF7CeBd9f2C1ac258",
@@ -141,9 +142,7 @@ const CONTRACTS = {
     ReferralStorage: "0xe6fab3f0c7199b0d34d7fbe83394fc0e0d06e99d",
     ReferralReader: "0x8Aa382760BCdCe8644C33e6C2D52f6304A76F5c8",
 
-    GNS: {
-      GNS_Storage: "0xaee4d11a16B2bc65EDD6416Fb626EB404a6D65BD",
-    }
+    Multicall: "0xcA11bde05977b3631167028862bE2a173976CA11",
   },
   43114: {
     // avalanche
@@ -193,9 +192,6 @@ export function getContract(chainId, name, market) {
   }
   if (!CONTRACTS[chainId][name]) {
     throw new Error(`Unknown contract "${name}" for chainId ${chainId}`);
-  }
-  if (market) {
-    return CONTRACTS[chainId][market][name];
   }
   return CONTRACTS[chainId][name];
 }

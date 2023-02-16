@@ -95,6 +95,7 @@ import icon_settings from '../../../../img/icon-settings.svg';
 import ChooseMarketModal from './../../../../components/UI/modal/ChooseMarketModal';
 import { separateThousands } from './../../../../components/utils/sepThousands';
 import { floor } from './../../../../components/utils/math';
+import GNS_Storage from '../../abis/GNS/GNS_Storage.json';
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -110,7 +111,7 @@ const leverageSliderHandle = (props) => {
   return (
     <SliderTooltip
       prefixCls="rc-slider-tooltip"
-      overlay={`${value}%`}
+      overlay={`${value}`}
       visible={dragging}
       placement="top"
       key={index}
@@ -246,6 +247,7 @@ export default function SwapBox(props) {
     [chainId, "Exchange-swap-leverage-slider-enabled"],
     true
   );
+
 
   const hasLeverageOption = isLeverageSliderEnabled && !isNaN(parseFloat(leverageOption));
 
@@ -1879,19 +1881,43 @@ export default function SwapBox(props) {
     feeBps = feeBasisPoints;
   }
 
-  const leverageMarks = {
-    1.1: "1.1x",
-    5: "5x",
-    10: "10x",
-    15: "15x",
-    20: "20x",
-    25: "25x",
-    30: "30x",
-    35: "35x",
-    40: "40x",
-    45: "45x",
-    50: "50x",
+  const leverageStorage = {
+    GMX: {
+      marks: {
+        1.1: "1.1x",
+        5: "5x",
+        10: "10x",
+        15: "15x",
+        20: "20x",
+        25: "25x",
+        30: "30x",
+        35: "35x",
+        40: "40x",
+        45: "45x",
+        50: "50x",
+      },
+      min: 1.1,
+      max: 50,
+    },
+    GNS: {
+      marks: {
+        2: "2x",
+        25: "25x",
+        50: "50x",
+        75: "75x",
+        100: "100x",
+        125: "125x",
+        150: "150x",
+      },
+      min: 2,
+      max: 150,
+    }
   };
+  const curLeverage = leverageStorage[suitableMarket?.name];
+
+  const Storage_contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, library?.getSigner());
+  Storage_contract.openTradesCount(account, 0)
+    .then(console.log, console.log)
 
   if (!fromToken || !toToken) {
     return null;
@@ -2202,10 +2228,10 @@ export default function SwapBox(props) {
                 })}
               >
                 <Slider
-                  min={1.1}
-                  max={MAX_ALLOWED_LEVERAGE / BASIS_POINTS_DIVISOR}
-                  step={0.1}
-                  marks={leverageMarks}
+                  min={curLeverage?.min}
+                  max={curLeverage?.max}
+                  step={1}
+                  marks={curLeverage?.marks}
                   handle={leverageSliderHandle}
                   onChange={(value) => setLeverageOption(value)}
                   value={leverageOption}
