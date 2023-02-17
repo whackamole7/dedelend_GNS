@@ -105,13 +105,13 @@ export default function ConfirmationBox(props) {
     minExecutionFee,
     minExecutionFeeUSD,
     minExecutionFeeErrorMessage,
+    savedSlippageAmount,
+    userSlippage,
+    setUserSlippage,
+    allowedSlippage,
   } = props;
 
   const nativeTokenSymbol = getConstant(chainId, "nativeTokenSymbol");
-
-  // Default Slippage
-  // const [savedSlippageAmount] = useLocalStorageSerializeKey([chainId, SLIPPAGE_BPS_KEY], DEFAULT_SLIPPAGE_AMOUNT);
-  const [savedSlippageAmount] = useState(DEFAULT_SLIPPAGE_AMOUNT);
   
   const [isProfitWarningAccepted, setIsProfitWarningAccepted] = useState(false);
   const [isTriggerWarningAccepted, setIsTriggerWarningAccepted] = useState(false);
@@ -262,15 +262,6 @@ export default function ConfirmationBox(props) {
   const spread = getSpread(fromTokenInfo, toTokenInfo, isLong, nativeTokenAddress);
   // it's meaningless for limit/stop orders to show spread based on current prices
   const showSpread = isMarketOrder && !!spread;
-
-  const [userSlippage, setUserSlippage] = useState('')
-  let allowedSlippage = savedSlippageAmount;
-  // if (isHigherSlippageAllowed) {
-  //   allowedSlippage = DEFAULT_HIGHER_SLIPPAGE_AMOUNT;
-  // }
-  if (userSlippage !== '') {
-    allowedSlippage = userSlippage * 100;
-  }
 
   const renderSpreadWarning = useCallback(() => {
     if (!isMarketOrder) {

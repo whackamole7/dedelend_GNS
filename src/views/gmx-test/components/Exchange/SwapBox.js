@@ -11,6 +11,7 @@ import { ethers } from "ethers";
 
 import { IoMdSwap } from "react-icons/io";
 import { BsArrowRight } from "react-icons/bs";
+import { BigNumber } from "ethers";
 
 import {
   adjustForDecimals,
@@ -96,6 +97,9 @@ import ChooseMarketModal from './../../../../components/UI/modal/ChooseMarketMod
 import { separateThousands } from './../../../../components/utils/sepThousands';
 import { floor } from './../../../../components/utils/math';
 import GNS_Storage from '../../abis/GNS/GNS_Storage.json';
+import GNS_Trading from '../../abis/GNS/GNS_Trading.json';
+import { GNS_PAIRS, WEI_DECIMALS } from './../../lib/GNS_legacy';
+import { DEFAULT_SLIPPAGE_AMOUNT } from './../../lib/legacy';
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -200,10 +204,8 @@ export default function SwapBox(props) {
   const [isHigherSlippageAllowed, setIsHigherSlippageAllowed] = useState(false);
   const { attachedOnChain, userReferralCode } = useUserReferralCode(library, chainId, account);
 
-  let allowedSlippage = savedSlippageAmount;
-  if (isHigherSlippageAllowed) {
-    allowedSlippage = DEFAULT_HIGHER_SLIPPAGE_AMOUNT;
-  }
+  const [userSlippage, setUserSlippage] = useState(DEFAULT_SLIPPAGE_AMOUNT / 100);
+  const allowedSlippage = userSlippage ? userSlippage * 100 : DEFAULT_SLIPPAGE_AMOUNT;
 
   const defaultCollateralSymbol = getConstant(chainId, "defaultCollateralSymbol");
   // TODO hack with useLocalStorageSerializeKey
@@ -1707,6 +1709,24 @@ export default function SwapBox(props) {
       });
   };
 
+  const openTrade = async () => {
+    const pairIndex = GNS_PAIRS.findIndex(pair => toToken.symbol === pair);
+    const posSize = (fromValue ** WEI_DECIMALS).toString();
+    const openPrice = (toTokenInfo.maxPrice / 10**20).toString();
+    const roundLeverage = leverage / 10**4;
+    const typeOfOrder = isMarketOrder ? 0 : 1;
+    const slippage = userSlippage * 10**10;
+
+    const contract = new ethers.Contract(GNS_Trading.address, GNS_Trading.abi, library.getSigner());
+    contract.openTrade(
+      [account, pairIndex, 0, 0, posSize, openPrice, isLong, roundLeverage, '', ''],
+      typeOfOrder,
+      0,
+      slippage,
+      account
+    ).then(console.log, console.log)
+  };
+
   const onSwapOptionChange = (opt) => {
     setSwapOption(opt);
     if (orderOption === STOP) {
@@ -1740,7 +1760,7 @@ export default function SwapBox(props) {
       return;
     }
 
-    setIsPendingConfirmation(true);
+    // setIsPendingConfirmation(true);
 
     if (isSwap) {
       swap();
@@ -1752,7 +1772,17 @@ export default function SwapBox(props) {
       return;
     }
 
-    increasePosition();
+    switch(suitableMarket.name) {
+      case 'GMX':
+        increasePosition();
+        return;
+      case 'GNS':
+        openTrade();
+        return;
+      default:
+        return;
+    }
+
   };
 
 
@@ -1914,10 +1944,6 @@ export default function SwapBox(props) {
     }
   };
   const curLeverage = leverageStorage[suitableMarket?.name];
-
-  const Storage_contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, library?.getSigner());
-  Storage_contract.openTradesCount(account, 0)
-    .then(console.log, console.log)
 
   if (!fromToken || !toToken) {
     return null;
@@ -2563,6 +2589,10 @@ export default function SwapBox(props) {
           minExecutionFee={minExecutionFee}
           minExecutionFeeUSD={minExecutionFeeUSD}
           minExecutionFeeErrorMessage={minExecutionFeeErrorMessage}
+          savedSlippageAmount={savedSlippageAmount}
+          userSlippage={userSlippage}
+          setUserSlippage={setUserSlippage}
+          allowedSlippage={allowedSlippage}
         />
       )}
       {renderModal()}
