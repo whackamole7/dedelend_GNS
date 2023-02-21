@@ -12,6 +12,7 @@ import { ethers } from "ethers";
 import { IoMdSwap } from "react-icons/io";
 import { BsArrowRight } from "react-icons/bs";
 import { BigNumber } from "ethers";
+import { notifySuccess, errAlert } from '../../../../components/utils/notifications';
 
 import {
   adjustForDecimals,
@@ -1711,21 +1712,40 @@ export default function SwapBox(props) {
 
   const openTrade = async () => {
     const pairIndex = GNS_PAIRS.findIndex(pair => toToken.symbol === pair);
-    const posSize = (fromValue ** WEI_DECIMALS).toString();
-    const openPrice = (toTokenInfo.maxPrice / 10**20).toString();
+    const posSize = ethers.utils.parseEther("7500");
+    const openPrice = (toTokenInfo.maxPrice.div('1' + '0'.repeat(20))).toString();
     const roundLeverage = leverage / 10**4;
     const typeOfOrder = isMarketOrder ? 0 : 1;
     const slippage = userSlippage * 10**10;
 
     const contract = new ethers.Contract(GNS_Trading.address, GNS_Trading.abi, library.getSigner());
+
     contract.openTrade(
-      [account, pairIndex, 0, 0, posSize, openPrice, isLong, roundLeverage, '', ''],
+      [account, pairIndex, 0, 0, posSize, openPrice, isLong, roundLeverage, 0, 0],
       typeOfOrder,
       0,
       slippage,
       account
-    ).then(console.log, console.log)
+    ).then(tsc => {
+      console.log(tsc);
+      tsc.await()
+        .then(() => {
+          notifySuccess('Position opened!', tsc.hash);
+        })
+    }, errAlert);
   };
+
+  const setTakeProfit = async (val) => {
+    const newTP = (val * 10**10).toString();
+    
+    const contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, library.getSigner());
+    // contract.updateTp(
+    //   account,
+    //   pairIndex,
+    //   index,
+    //   newTP
+    // )
+  }
 
   const onSwapOptionChange = (opt) => {
     setSwapOption(opt);

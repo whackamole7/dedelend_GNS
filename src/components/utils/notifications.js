@@ -18,7 +18,10 @@ export const notifySuccess = (text, hash) => {
 }
 
 export const errAlert = (err, setIsLoading) => {
-	const msg = err.reason ?? err.message;
+	let msg = err.reason ?? err.message;
+	if (err.message === 'Internal JSON-RPC error.') {
+		msg = err.data.message;
+	}
 	
 	console.log(err);
 	// alert(`Error code: ${err.code}\nError message: ${msg}\n\nCheck the console for details.`)
