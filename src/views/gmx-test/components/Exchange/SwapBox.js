@@ -348,7 +348,7 @@ export default function SwapBox(props) {
   const routerAddress = getContract(chainId, "Router");
   const tokenAllowanceAddress = fromTokenAddress === AddressZero ? nativeTokenAddress : fromTokenAddress;
   const { data: tokenAllowance } = useSWR(
-    active && [active, chainId, tokenAllowanceAddress, "allowance", account, DDL_AccountManager.address],
+    active && [active, chainId, tokenAllowanceAddress, "allowance", account, routerAddress],
     {
       fetcher: fetcher(library, Token),
     }
@@ -1632,7 +1632,7 @@ export default function SwapBox(props) {
       priceLimit, // _acceptablePrice
       minExecutionFee, // _executionFee
       referralCode, // _referralCode
-      // AddressZero, // _callbackTarget
+      AddressZero, // _callbackTarget
     ];
 
     let method = "createIncreasePosition";
@@ -1643,14 +1643,13 @@ export default function SwapBox(props) {
       params = [
         path, // _path
         indexTokenAddress, // _indexToken
-        boundedFromAmount, // _amountIn
         0, // _minOut
         toUsdMax, // _sizeDelta
         isLong, // _isLong
         priceLimit, // _acceptablePrice
         minExecutionFee, // _executionFee
-        referralCode, // _referralCode,
-        // AddressZero, // _callbackTarget
+        referralCode, // _referralCode
+        AddressZero, // _callbackTarget
       ];
     }
 
@@ -1663,10 +1662,8 @@ export default function SwapBox(props) {
       return;
     }
 
-    // const contractAddress = getContract(chainId, "PositionRouter");
-    // const contract = new ethers.Contract(contractAddress, PositionRouter.abi, library.getSigner());
-    // const contract = DDL_AccountManager;
-    const contract = new ethers.Contract(DDL_AccountManager.address, DDL_AccountManager_abi, library.getSigner());
+    const contractAddress = getContract(chainId, "PositionRouter");
+    const contract = new ethers.Contract(contractAddress, PositionRouter.abi, library.getSigner());
     
     const indexToken = getTokenInfo(infoTokens, indexTokenAddress);
     const tokenSymbol = indexToken.isWrapped ? getConstant(chainId, "nativeTokenSymbol") : indexToken.symbol;
@@ -1811,8 +1808,7 @@ export default function SwapBox(props) {
       setIsApproving,
       library,
       tokenAddress: fromToken.address,
-      // spender: routerAddress,
-      spender: DDL_AccountManager.address,
+      spender: routerAddress,
       chainId: chainId,
       onApproveSubmitted: () => {
         setIsWaitingForApproval(true);

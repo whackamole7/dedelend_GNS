@@ -32,6 +32,8 @@ const PositionsItem = (props) => {
 		isLarge,
 	} = props;
 
+	const marketImg = require(`../../../../img/icon-${position.market}.svg`).default;
+
 	return (
 		<>
 			{isLarge ?
@@ -42,6 +44,7 @@ const PositionsItem = (props) => {
 							{position.hasPendingChanges && <ImSpinner2 className="spin position-loading-icon" />}
 						</div>
 						<div className="Exchange-list-info-label">
+							<img className='market-logo' src={marketImg} alt={`${position.market} icon`} />
 							{position.leverage && (
 								<span className="muted">{formatAmount(position.leverage, 4, 2, true)}x&nbsp;</span>
 							)}
@@ -52,7 +55,7 @@ const PositionsItem = (props) => {
 					</td>
 					<td>
 						<div>${formatAmount(position.size, USD_DECIMALS, 2, true)}</div>
-						{positionOrders.length > 0 && (
+						{positionOrders?.length > 0 && (
 							<div onClick={() => setListSection && setListSection("Orders")}>
 								<Tooltip
 									handle={`Orders (${positionOrders.length})`}
@@ -128,23 +131,7 @@ const PositionsItem = (props) => {
 						// onPositionClick(position)
 						return;
 					}}>
-						<Tooltip
-							style={{width: 75, display: 'block'}}
-							handle={`$${formatAmount(position.markPrice, USD_DECIMALS, 2, true)}`}
-							position="left-bottom"
-							handleClassName="plain"
-							renderContent={() => {
-								return (
-									<div>
-										Click on a row to select the position's market, then use the swap box to increase your
-										position size if needed.
-										<br />
-										<br />
-										Use the "Close" button to reduce your position size, or to set stop-loss / take-profit orders.
-									</div>
-								);
-							}}
-						/>
+						{`$${formatAmount(position.markPrice, USD_DECIMALS, 2, true)}`}
 					</td>
 					<td className="" onClick={() => {
 						// onPositionClick(position)

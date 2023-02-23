@@ -51,6 +51,8 @@ import "./Exchange.scss";
 import "../../components/Exchange/Exchange-lists.scss";
 import { fetcher } from "../../lib/contracts/fetcher";
 import { DDL_AccountManager, USDC } from "../../../../components/utils/contracts";
+import GNS_Storage from "../../abis/GNS/GNS_Storage.json";
+import { GNS_PAIRS } from './../../lib/GNS_legacy';
 
 
 // Markets list
@@ -514,7 +516,33 @@ export const Exchange = forwardRef((props, ref) => {
       ]),
     }
   );
+  const { data: positionsGNS, error: positionsGNSError } = useSWR(
+    active && [account],
+    async () => {
+      const positions = [];
+      let position;
 
+      const contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, library.getSigner());
+      
+      for (let i = 0; i < GNS_PAIRS.length; i++) {
+        const pairIndex = i;
+        
+        for (let j = 0; j < 3; j++) {
+          const index = j;
+          position = await contract.openTrades(account, pairIndex, index)
+          positions.push(position);
+        }
+      }
+
+      return positions;
+    }
+  );
+  // console.log(positionsGNS?.[0].openPrice / 10**10);
+  // console.log(positionsGNS?.[0].initialPosToken / 10**18);
+  // console.log(positionsGNS?.[0].positionSizeDai / 10**18);
+
+
+  
   const positionsDataIsLoading = active && !positionData && !positionDataError;
 
   const { data: fundingRateInfo } = useSWR([active, chainId, readerAddress, "getFundingRates"], {
@@ -566,6 +594,8 @@ export const Exchange = forwardRef((props, ref) => {
     let title = getPageTitle(currentTokenPriceStr + ` | ${selectedToken.symbol}${selectedToken.isStable ? "" : "USD"}`);
     document.title = title;
   }, [tokenSelection, swapOption, infoTokens, chainId, fromTokenAddress, toTokenAddress]);
+
+  const maxPrice = getTokenInfo(infoTokens, toTokenAddress).maxPrice;
 
   const { positions, positionsMap } = getPositions(
     chainId,
@@ -880,6 +910,7 @@ export const Exchange = forwardRef((props, ref) => {
             isWaitingForPositionRouterApproval={isWaitingForPositionRouterApproval}
             orderBookApproved={orderBookApproved}
             positionRouterApproved={positionRouterApproved}
+            positionsGNS={positionsGNS}
             positions={positions}
             positionsMap={positionsMap}
             infoTokens={infoTokens}

@@ -26,6 +26,8 @@ import {
 } from "../../lib/legacy";
 import PositionShare from "./PositionShare";
 import PositionsItem from './PositionsItem';
+import { ADDRESS_ZERO } from '@uniswap/v3-sdk';
+import { GNS_PAIRS } from './../../lib/GNS_legacy';
 
 const getOrdersForPosition = (account, position, orders, nativeTokenAddress) => {
   if (!orders || orders.length === 0) {
@@ -62,6 +64,7 @@ export default function PositionsList(props) {
   const {
     pendingPositions,
     setPendingPositions,
+    positionsGNS,
     positions,
     positionsDataIsLoading,
     positionsMap,
@@ -93,7 +96,6 @@ export default function PositionsList(props) {
     minExecutionFeeErrorMessage,
     usdgSupply,
     totalTokenWeights,
-    dgAddress,
   } = props;
   
 
@@ -227,6 +229,8 @@ export default function PositionsList(props) {
               </div>
             )}
             {positions.map((position) => {
+              position.market = "GMX";
+              
               const positionOrders = getOrdersForPosition(account, position, orders, nativeTokenAddress);
               const liquidationPrice = getLiquidationPrice(position);
               const hasPositionProfit = position[showPnlAfterFees ? "hasProfitAfterFees" : "hasProfit"];
@@ -256,7 +260,58 @@ export default function PositionsList(props) {
                   borrowFeeUSD={borrowFeeUSD}
                   editPosition={editPosition}
                   sellPosition={sellPosition}
-                  dgAddress={dgAddress}
+                  isLarge={false}
+                />
+              );
+            })}
+            {positionsGNS?.map(pos => {
+              if (pos.trader === ADDRESS_ZERO) {
+                return;
+              }
+              
+              const position = Object.assign({}, pos);
+
+              position.market = "GNS";
+              const key = `${position.pairIndex}${position.index}`;
+              const isLong = position.buy;
+
+              const tokenSymb = GNS_PAIRS[position.pairIndex];
+              const tokenAddr = Object.keys(infoTokens).find(addr => infoTokens[addr].symbol === tokenSymb);
+              const curPrice = infoTokens[tokenAddr].maxPrice;
+
+              position.indexToken = {
+                symbol: tokenSymb,
+              };
+              console.log(position);
+              position.size = position.positionSizeDai;
+              
+              let hasPositionProfit;
+              if (isLong) {
+                hasPositionProfit = (curPrice / 10**20) > (position.openPrice.toString());
+              } else {
+                hasPositionProfit = (curPrice / 10**20) < (position.openPrice.toString());
+              }
+              console.log(infoTokens[tokenAddr].symbol, hasPositionProfit);
+              
+              const positionOrders = [];
+              const positionDelta = 0;
+              const liqPrice = 0; 
+              
+              return (
+                <PositionsItem
+                  key={key}
+                  position={position}
+                  onPositionClick={onPositionClick}
+                  setListSection={setListSection}
+                  positionOrders={positionOrders}
+                  showPnlAfterFees={showPnlAfterFees}
+                  hasPositionProfit={hasPositionProfit}
+                  positionDelta={positionDelta}
+                  liquidationPrice={liqPrice}
+                  cx={cx}
+                  // borrowFeeUSD={borrowFeeUSD}
+                  editPosition={editPosition}
+                  sellPosition={sellPosition}
                   isLarge={false}
                 />
               );
@@ -344,7 +399,58 @@ export default function PositionsList(props) {
                 borrowFeeUSD={borrowFeeUSD}
                 editPosition={editPosition}
                 sellPosition={sellPosition}
-                dgAddress={dgAddress}
+                isLarge={true}
+              />
+            );
+          })}
+          {positionsGNS?.map(pos => {
+            if (pos.trader === ADDRESS_ZERO) {
+              return;
+            }
+            
+            const position = Object.assign({}, pos);
+
+            position.market = "GNS";
+            const key = `${position.pairIndex}${position.index}`;
+            const isLong = position.buy;
+
+            const tokenSymb = GNS_PAIRS[position.pairIndex];
+            const tokenAddr = Object.keys(infoTokens).find(addr => infoTokens[addr].symbol === tokenSymb);
+            const curPrice = infoTokens[tokenAddr].maxPrice;
+
+            position.indexToken = {
+              symbol: tokenSymb,
+            };
+            console.log(position);
+            position.size = position.positionSizeDai;
+            
+            let hasPositionProfit;
+            if (isLong) {
+              hasPositionProfit = (curPrice / 10**20) > (position.openPrice.toString());
+            } else {
+              hasPositionProfit = (curPrice / 10**20) < (position.openPrice.toString());
+            }
+            console.log(infoTokens[tokenAddr].symbol, hasPositionProfit);
+            
+            const positionOrders = [];
+            const positionDelta = 0;
+            const liqPrice = 0; 
+            
+            return (
+              <PositionsItem
+                key={key}
+                position={position}
+                onPositionClick={onPositionClick}
+                setListSection={setListSection}
+                positionOrders={positionOrders}
+                showPnlAfterFees={showPnlAfterFees}
+                hasPositionProfit={hasPositionProfit}
+                positionDelta={positionDelta}
+                liquidationPrice={liqPrice}
+                cx={cx}
+                // borrowFeeUSD={borrowFeeUSD}
+                editPosition={editPosition}
+                sellPosition={sellPosition}
                 isLarge={true}
               />
             );

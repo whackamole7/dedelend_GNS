@@ -25,22 +25,23 @@ export async function callContract(
       opts = params;
       params = [];
     }
-
+    
     if (!opts) {
       opts = {};
     }
-
+    
     const txnOpts: any = {};
-
+    
     if (opts.value) {
       txnOpts.value = opts.value;
     }
-
+    
     txnOpts.gasLimit = opts.gasLimit ? opts.gasLimit : await getGasLimit(contract, method, params, opts.value);
-
+    
     await setGasPrice(txnOpts, contract.provider, chainId);
 
     const res = await contract[method](...params, txnOpts);
+    
     const txUrl = getExplorerUrl(chainId) + "tx/" + res.hash;
     const sentMsg = opts.sentMsg || "Transaction sent.";
 
