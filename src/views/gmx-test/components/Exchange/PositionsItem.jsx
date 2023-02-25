@@ -29,6 +29,8 @@ const PositionsItem = (props) => {
 		borrowFeeUSD,
 		editPosition,
 		sellPosition,
+		setStopLoss,
+		setTakeProfit,
 		isLarge,
 	} = props;
 
@@ -162,10 +164,22 @@ const PositionsItem = (props) => {
 						
 					</td>
 					<td>
-
+						<button
+							className="Exchange-list-action"
+							onClick={() => setStopLoss(position)}
+							disabled={position.size.eq(0)}
+						>
+							Set SL
+						</button>
 					</td>
 					<td>
-
+						<button
+							className="Exchange-list-action"
+							onClick={() => setTakeProfit(position)}
+							disabled={position.size.eq(0)}
+						>
+							Set TP
+						</button>
 					</td>
 					<td className="td-btn pos-relative">
 						<button
@@ -319,19 +333,43 @@ const PositionsItem = (props) => {
 						<div className="label">
 							PNL (ROE %)
 						</div>
-						<div>dummy</div>
+						<div style={{ width: 100, display: 'block' }}>
+							{position.deltaStr && (
+								<div
+									className={cx("Exchange-list-info-label", {
+										positive: hasPositionProfit && positionDelta.gt(0),
+										negative: !hasPositionProfit && positionDelta.gt(0),
+										muted: positionDelta.eq(0),
+									})}
+								>
+									{position.deltaStr} ({position.deltaPercentageStr})
+								</div>
+							)}
+						</div>
 					</div>
 					<div className="App-card-row">
 						<div className="label">
 							Stop Loss
 						</div>
-						<div>dummy</div>
+						<button
+							className="Exchange-list-action"
+							onClick={() => setTakeProfit(position)}
+							disabled={position.size.eq(0)}
+						>
+							Set TP
+						</button>
 					</div>
 					<div className="App-card-row">
 						<div className="label">
 							Take Profit
 						</div>
-						<div>dummy</div>
+						<button
+							className="Exchange-list-action"
+							onClick={() => setTakeProfit(position)}
+							disabled={position.size.eq(0)}
+						>
+							Set TP
+						</button>
 					</div>
 				</div>
 				<div className="App-card-divider"></div>

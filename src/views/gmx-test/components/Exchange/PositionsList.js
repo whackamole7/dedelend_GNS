@@ -96,6 +96,7 @@ export default function PositionsList(props) {
     minExecutionFeeErrorMessage,
     usdgSupply,
     totalTokenWeights,
+    openModal,
   } = props;
   
 
@@ -121,6 +122,13 @@ export default function PositionsList(props) {
     setIsHigherSlippageAllowed(false);
   };
 
+  const setStopLoss = (position) => {
+    
+  }
+  const setTakeProfit = (position) => {
+
+  }
+  
   const onPositionClick = (position) => {
     helperToast.success(`${position.isLong ? "Long" : "Short"} ${position.indexToken.symbol} market selected`);
     setMarket(position.isLong ? LONG : SHORT, position.indexToken.address);
@@ -312,6 +320,8 @@ export default function PositionsList(props) {
                   // borrowFeeUSD={borrowFeeUSD}
                   editPosition={editPosition}
                   sellPosition={sellPosition}
+                  setStopLoss={setStopLoss}
+                  setTakeProft={setTakeProfit}
                   isLarge={false}
                 />
               );
@@ -399,6 +409,8 @@ export default function PositionsList(props) {
                 borrowFeeUSD={borrowFeeUSD}
                 editPosition={editPosition}
                 sellPosition={sellPosition}
+                setStopLoss={setStopLoss}
+                setTakeProft={setTakeProfit}
                 isLarge={true}
               />
             );

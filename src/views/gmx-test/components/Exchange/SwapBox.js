@@ -101,6 +101,7 @@ import GNS_Storage from '../../abis/GNS/GNS_Storage.json';
 import GNS_Trading from '../../abis/GNS/GNS_Trading.json';
 import { GNS_PAIRS, WEI_DECIMALS } from './../../lib/GNS_legacy';
 import { DEFAULT_SLIPPAGE_AMOUNT } from './../../lib/legacy';
+import SLTPModal from './../../../../components/UI/modal/SLTPModal';
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -433,7 +434,13 @@ export default function SwapBox(props) {
   // Modal functionality
   const [modal, setModal] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
-  const renderModal = () => {
+
+  const openModal = (name) => {
+    setModal(name);
+    setModalVisible(true);
+  }
+  
+  const renderModal = (position) => {
     switch(modal) {
       case 'Choose-Market':
         return (
@@ -445,11 +452,31 @@ export default function SwapBox(props) {
             setMarkets={setMarkets}
             getLiq={getLiquidity}
           />
-        )
+        );
+      case 'Stop-Loss':
+        return (
+          <SLTPModal
+            visible={modalVisible}
+            setVisible={setModalVisible}
+            position={position}
+            title={'Set Stop Loss'}
+            onClick={setStopLoss}
+          />
+        );
+      case 'Take-Profit':
+        return (
+          <SLTPModal
+            visible={modalVisible}
+            setVisible={setModalVisible}
+            position={position}
+            title={'Set Take Profit'}
+            onClick={setTakeProfit}
+          />
+        );
       default:
         return (
           <></>
-        )
+        );
     }
   }
 
@@ -1000,8 +1027,12 @@ export default function SwapBox(props) {
       return [t`Min leverage: 1.1x`];
     }
 
-    if (leverage && leverage.gt(MAX_ALLOWED_LEVERAGE)) {
-      return [t`Max leverage: ${(MAX_ALLOWED_LEVERAGE / BASIS_POINTS_DIVISOR).toFixed(1)}x`];
+    if (leverage) {
+      if (suitableMarket?.name === 'GMX' && leverage.gt(MAX_ALLOWED_LEVERAGE)) {
+        return [t`Max leverage: ${(MAX_ALLOWED_LEVERAGE / BASIS_POINTS_DIVISOR).toFixed(1)}x`];
+      } else if (suitableMarket?.name === 'GNS' && leverage.gt(150 * BASIS_POINTS_DIVISOR)) {
+        return [t`Max leverage: 150x`];
+      }
     }
 
     if (!isMarketOrder && entryMarkPrice && triggerPriceUsd && !savedShouldDisableValidationForTesting) {
@@ -1708,8 +1739,10 @@ export default function SwapBox(props) {
   };
 
   const openTrade = async () => {
+    setIsSubmitting(true);
+    
     const pairIndex = GNS_PAIRS.findIndex(pair => toToken.symbol === pair);
-    const posSize = ethers.utils.parseEther("7500");
+    const posSize = ethers.utils.parseEther(fromValue);
     const openPrice = (toTokenInfo.maxPrice.div('1' + '0'.repeat(20))).toString();
     const roundLeverage = leverage / 10**4;
     const typeOfOrder = isMarketOrder ? 0 : 1;
@@ -1724,14 +1757,22 @@ export default function SwapBox(props) {
       slippage,
       account
     ).then(tsc => {
+      setIsConfirming(false);
       console.log(tsc);
-      tsc.await()
+      tsc.wait()
         .then(() => {
           notifySuccess('Position opened!', tsc.hash);
         })
-    }, errAlert);
+    }, errAlert)
+    .finally(() => {
+      setIsSubmitting(false);
+      setIsPendingConfirmation(false);
+    });
   };
 
+  const setStopLoss = async (val) => {
+
+  }
   const setTakeProfit = async (val) => {
     const newTP = (val * 10**10).toString();
     
@@ -2017,8 +2058,7 @@ export default function SwapBox(props) {
             />
             <button className="btn Exchange-swap-box__settings-btn"
               onClick={() => {
-                setModal('Choose-Market');
-                setModalVisible(true);
+                openModal('Choose-Market');
               }}>
               <img src={icon_settings} alt="Settings icon" />
             </button>
