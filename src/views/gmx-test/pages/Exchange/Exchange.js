@@ -518,7 +518,7 @@ export const Exchange = forwardRef((props, ref) => {
     }
   );
   const { data: positionsGNS, error: positionsGNSError } = useSWR(
-    active && [account],
+    active && [active, chainId, GNS_Storage.address, "getPositionsGNS", account],
     async () => {
       const positions = [];
       let position;

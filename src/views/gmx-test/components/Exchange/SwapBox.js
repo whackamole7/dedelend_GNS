@@ -400,37 +400,50 @@ export default function SwapBox(props) {
     );
   };
 
-  const getLiquidity = async (marketName) => {
-    let value;
-    const symbol = toTokenInfo.symbol;
+  const { data: liquidity, error: liquidityError } = useSWR(
+    active && [active, chainId, GNS_Storage.address, "getLiquidity", account],
+    async () => {
+      const liqs = {};
+      const curPairSymbol = toTokenInfo.symbol;
+      
+      marketsList.forEach(async (market) => {
+        let liq;
+        let symbol = curPairSymbol;
+
+        switch(market.name) {
+          case 'GMX':
+            if (isLong) {
+              liq = toTokenInfo.maxAvailableLong / 10**USD_DECIMALS;
+            } else {
+              liq = toTokenInfo.maxAvailableShort / 10**USD_DECIMALS;
+            }
+
+            symbol = '';
+            break;
+          case 'GNS':
+            const contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, signer);
+            const pairIndex = GNS_PAIRS.findIndex(pair => curPairSymbol === pair);
+            const openInterest = await contract.openInterestDai(pairIndex, 0);
+            const maxOpenInterest = await contract.openInterestDai(pairIndex, 2);
     
-    switch(marketName) {
-      case 'GMX':
-        if (isLong) {
-          value = toTokenInfo.maxAvailableLong / 10**USD_DECIMALS;
-        } else {
-          value = toTokenInfo.maxAvailableShort / 10**USD_DECIMALS;
+            liq = BigNumber.from(maxOpenInterest?.sub(openInterest) + '0'.repeat(12)).div(toTokenInfo.maxPrice).toString();
+            
+            break;
+          default:
+            return;
         }
-        break;
-      case 'GNS':
-        const contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, signer);
-        const pairIndex = GNS_PAIRS.findIndex(pair => symbol === pair);
-        const openInterest = await contract.openInterestDai(pairIndex, 0);
-        const maxOpenInterest = await contract.openInterestDai(pairIndex, 2);
 
-        value = maxOpenInterest.sub(openInterest).div(toTokenInfo.maxPrice);
-        
-        break;
-      default:
-        return;
-    }
+        liqs[market.name] = {
+          value: Number(liq),
+          formattedValue: separateThousands(floor(liq)),
+          symbol,
+        }
+      })
 
-    return {
-      value,
-      // symbol,
-      formattedValue: separateThousands(floor(value)),
+      return liqs;
     }
-  }
+  );
+
   const [markets, setMarkets] = useLocalStorageByChainId(
     chainId,
     "Markets-Chosen",
@@ -456,7 +469,7 @@ export default function SwapBox(props) {
             marketsList={marketsList}
             markets={markets}
             setMarkets={setMarkets}
-            getLiq={getLiquidity}
+            liq={liquidity}
           />
         );
       case 'Stop-Loss':
@@ -495,7 +508,7 @@ export default function SwapBox(props) {
     }
 
     setSuitableMarket(markets.reduce((result, market) => {
-      if (getLiquidity(result.name).value > getLiquidity(market.name).value) {
+      if (liquidity[result.name]?.value > liquidity[market.name]?.value) {
         return result;
       }
       return market;
@@ -2359,8 +2372,8 @@ export default function SwapBox(props) {
                 Available Liquidity
               </div>
               <div className="align-right icon-container">
-                {suitableMarket && (
-                  '$' + getLiquidity(suitableMarket.name).formattedValue
+                {suitableMarket && liquidity && (
+                  liquidity[suitableMarket.name]?.formattedValue
                 )}
               </div>
             </div>
