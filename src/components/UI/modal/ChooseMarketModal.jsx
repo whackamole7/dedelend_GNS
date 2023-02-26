@@ -32,6 +32,7 @@ const ChooseMarketModal = (props) => {
 					marketsList.map(market => {
 						const icon = require(`../../../img/icon-${market.name}.svg`).default;
 						const liqInfo = getLiq(market.name);
+						console.log(liqInfo);
 
 						return (
 							<div

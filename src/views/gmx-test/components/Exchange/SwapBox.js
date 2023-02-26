@@ -102,6 +102,7 @@ import GNS_Trading from '../../abis/GNS/GNS_Trading.json';
 import { GNS_PAIRS, WEI_DECIMALS } from './../../lib/GNS_legacy';
 import { DEFAULT_SLIPPAGE_AMOUNT } from './../../lib/legacy';
 import SLTPModal from './../../../../components/UI/modal/SLTPModal';
+import { signer } from './../../../../components/utils/providers';
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -399,13 +400,12 @@ export default function SwapBox(props) {
     );
   };
 
-  const getLiquidity = (marketName) => {
+  const getLiquidity = async (marketName) => {
     let value;
-    // let symbol = toTokenInfo.symbol;
+    const symbol = toTokenInfo.symbol;
     
     switch(marketName) {
       case 'GMX':
-
         if (isLong) {
           value = toTokenInfo.maxAvailableLong / 10**USD_DECIMALS;
         } else {
@@ -413,7 +413,13 @@ export default function SwapBox(props) {
         }
         break;
       case 'GNS':
-        value = 2000;
+        const contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, signer);
+        const pairIndex = GNS_PAIRS.findIndex(pair => symbol === pair);
+        const openInterest = await contract.openInterestDai(pairIndex, 0);
+        const maxOpenInterest = await contract.openInterestDai(pairIndex, 2);
+
+        value = maxOpenInterest.sub(openInterest).div(toTokenInfo.maxPrice);
+        
         break;
       default:
         return;
