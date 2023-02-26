@@ -53,6 +53,7 @@ import { fetcher } from "../../lib/contracts/fetcher";
 import { DDL_AccountManager, USDC } from "../../../../components/utils/contracts";
 import GNS_Storage from "../../abis/GNS/GNS_Storage.json";
 import { GNS_PAIRS } from './../../lib/GNS_legacy';
+import { ADDRESS_ZERO } from '@uniswap/v3-sdk';
 
 
 // Markets list
@@ -529,7 +530,10 @@ export const Exchange = forwardRef((props, ref) => {
         
         for (let j = 0; j < 3; j++) {
           const index = j;
-          position = await contract.openTrades(account, pairIndex, index)
+          position = await contract.openTrades(account, pairIndex, index);
+          if (position.trader === ADDRESS_ZERO) {
+            continue;
+          }
           positions.push(position);
         }
       }
@@ -537,13 +541,8 @@ export const Exchange = forwardRef((props, ref) => {
       return positions;
     }
   );
-  // console.log(positionsGNS?.[0].openPrice / 10**10);
-  // console.log(positionsGNS?.[0].initialPosToken / 10**18);
-  // console.log(positionsGNS?.[0].positionSizeDai / 10**18);
-
-
   
-  const positionsDataIsLoading = active && !positionData && !positionDataError;
+  const positionsDataIsLoading = active && ((!positionData && !positionDataError) || (!positionsGNS && !positionsGNSError));
 
   const { data: fundingRateInfo } = useSWR([active, chainId, readerAddress, "getFundingRates"], {
     fetcher: fetcher(library, Reader, [vaultAddress, nativeTokenAddress, whitelistedTokenAddresses]),

@@ -23,11 +23,17 @@ import {
   SHORT,
   INCREASE,
   DECREASE,
+  BASIS_POINTS_DIVISOR,
+  getDeltaStr,
 } from "../../lib/legacy";
 import PositionShare from "./PositionShare";
 import PositionsItem from './PositionsItem';
 import { ADDRESS_ZERO } from '@uniswap/v3-sdk';
 import { GNS_PAIRS } from './../../lib/GNS_legacy';
+import GNS_Trading from '../../abis/GNS/GNS_Trading.json';
+import { notifySuccess } from './../../../../components/utils/notifications';
+import { ethers } from 'ethers';
+import { BigNumber } from 'ethers';
 
 const getOrdersForPosition = (account, position, orders, nativeTokenAddress) => {
   if (!orders || orders.length === 0) {
@@ -98,7 +104,8 @@ export default function PositionsList(props) {
     totalTokenWeights,
     openModal,
   } = props;
-  
+
+  const hasPositions = Boolean(positions?.length || positionsGNS?.length);
 
   const [positionToEditKey, setPositionToEditKey] = useState(undefined);
   const [positionToSellKey, setPositionToSellKey] = useState(undefined);
@@ -117,9 +124,24 @@ export default function PositionsList(props) {
   };
 
   const sellPosition = (position) => {
-    setPositionToSellKey(position.key);
-    setIsPositionSellerVisible(true);
-    setIsHigherSlippageAllowed(false);
+    if (position.market === 'GMX') {
+      setPositionToSellKey(position.key);
+      setIsPositionSellerVisible(true);
+      setIsHigherSlippageAllowed(false);
+    } else if (position.market === 'GNS') {
+      const contract = new ethers.Contract(GNS_Trading.address, GNS_Trading.abi, library.getSigner());
+
+      contract.closeTradeMarket(
+        position.pairIndex,
+        position.index
+      ).then(tsc => {
+        console.log(tsc);
+
+        tsc.wait().then(() => {
+          notifySuccess('Position closed!', tsc.hash);
+        })
+      });
+    }
   };
 
   const setStopLoss = (position) => {
@@ -223,15 +245,15 @@ export default function PositionsList(props) {
           totalTokenWeights={totalTokenWeights}
         />
       )}
-      {positions && (
+      {hasPositions && (
         <div className="Exchange-list small">
           <div>
-            {positions.length === 0 && positionsDataIsLoading && (
+            {!hasPositions && positionsDataIsLoading && (
               <div className="Exchange-empty-positions-list-note App-card">
                 <Trans>Loading...</Trans>
               </div>
             )}
-            {positions.length === 0 && !positionsDataIsLoading && (
+            {!hasPositions && !positionsDataIsLoading && (
               <div className="Exchange-empty-positions-list-note App-card Exchange-list-empty-note">
                 <Trans>No open positions</Trans>
               </div>
@@ -290,7 +312,6 @@ export default function PositionsList(props) {
               position.indexToken = {
                 symbol: tokenSymb,
               };
-              console.log(position);
               position.size = position.positionSizeDai;
               
               let hasPositionProfit;
@@ -299,7 +320,6 @@ export default function PositionsList(props) {
               } else {
                 hasPositionProfit = (curPrice / 10**20) < (position.openPrice.toString());
               }
-              console.log(infoTokens[tokenAddr].symbol, hasPositionProfit);
               
               const positionOrders = [];
               const positionDelta = 0;
@@ -331,7 +351,7 @@ export default function PositionsList(props) {
       )}
       <table className="Exchange-list large App-box">
         <tbody>
-          {positions.length > 0 && (
+          {hasPositions && (
             <tr className="Exchange-list-header">
               <th>
                 <Trans>Position</Trans>
@@ -363,14 +383,14 @@ export default function PositionsList(props) {
               <th></th>
             </tr>
           )}
-          {positions.length === 0 && positionsDataIsLoading && (
+          {!hasPositions && positionsDataIsLoading && (
             <tr>
               <td colSpan="15">
                 <div className="Exchange-empty-positions-list-note">Loading...</div>
               </td>
             </tr>
           )}
-          {positions.length === 0 && !positionsDataIsLoading && (
+          {!hasPositions && !positionsDataIsLoading && (
             <tr>
               <td colSpan="15" className="Exchange-list-empty-note">
                 No open positions
@@ -425,6 +445,7 @@ export default function PositionsList(props) {
             position.market = "GNS";
             const key = `${position.pairIndex}${position.index}`;
             const isLong = position.buy;
+            position.isLong = isLong;
 
             const tokenSymb = GNS_PAIRS[position.pairIndex];
             const tokenAddr = Object.keys(infoTokens).find(addr => infoTokens[addr].symbol === tokenSymb);
@@ -433,20 +454,40 @@ export default function PositionsList(props) {
             position.indexToken = {
               symbol: tokenSymb,
             };
-            console.log(position);
-            position.size = position.positionSizeDai;
+            position.size = BigNumber.from(position.positionSizeDai + '0'.repeat(12)).mul(position.leverage);
+            position.markPrice = curPrice;
+            position.averagePrice = BigNumber.from(position.openPrice + '0'.repeat(20));
+            position.collateral = BigNumber.from(position.positionSizeDai + '0'.repeat(12));
             
             let hasPositionProfit;
             if (isLong) {
-              hasPositionProfit = (curPrice / 10**20) > (position.openPrice.toString());
+              hasPositionProfit = position.markPrice.gte(position.averagePrice);
             } else {
-              hasPositionProfit = (curPrice / 10**20) < (position.openPrice.toString());
+              hasPositionProfit = position.markPrice.lte(position.averagePrice);
             }
-            console.log(infoTokens[tokenAddr].symbol, hasPositionProfit);
+            position.hasProfit = hasPositionProfit;
+
             
+            const priceDelta = position.averagePrice.gt(position.markPrice)
+            ? position.averagePrice.sub(position.markPrice)
+            : position.markPrice.sub(position.averagePrice);
+            position.delta = position.size.mul(priceDelta).div(position.averagePrice);
+            
+            position.deltaPercentage = position.delta.mul(BASIS_POINTS_DIVISOR).div(position.collateral);
+            
+            const { deltaStr, deltaPercentageStr } = getDeltaStr({
+              delta: position.delta,
+              deltaPercentage: position.deltaPercentage,
+              hasProfit: position.hasProfit,
+            });
+
+            position.deltaStr = deltaStr;
+            position.deltaPercentageStr = deltaPercentageStr;
+            position.deltaBeforeFeesStr = deltaStr;
+            
+            position.leverage = position.leverage * 10**4;
             const positionOrders = [];
-            const positionDelta = 0;
-            const liqPrice = 0; 
+            const liqPrice = 0;
             
             return (
               <PositionsItem
@@ -457,7 +498,7 @@ export default function PositionsList(props) {
                 positionOrders={positionOrders}
                 showPnlAfterFees={showPnlAfterFees}
                 hasPositionProfit={hasPositionProfit}
-                positionDelta={positionDelta}
+                positionDelta={position.delta}
                 liquidationPrice={liqPrice}
                 cx={cx}
                 // borrowFeeUSD={borrowFeeUSD}

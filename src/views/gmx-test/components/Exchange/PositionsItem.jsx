@@ -35,7 +35,7 @@ const PositionsItem = (props) => {
 	} = props;
 
 	const marketImg = require(`../../../../img/icon-${position.market}.svg`).default;
-
+	
 	return (
 		<>
 			{isLarge ?
@@ -96,7 +96,7 @@ const PositionsItem = (props) => {
 					</td>
 					<td>
 						<Tooltip
-							handle={`$${formatAmount(position.collateralAfterFee, USD_DECIMALS, 2, true)}`}
+							handle={`$${formatAmount(position.collateral, USD_DECIMALS, 2, true)}`}
 							position="left-bottom"
 							handleClassName={cx("plain", { negative: position.hasLowCollateral })}
 							renderContent={() => {
