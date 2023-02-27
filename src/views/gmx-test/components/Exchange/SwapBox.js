@@ -1204,14 +1204,24 @@ export default function SwapBox(props) {
         return [t`Liquidity data not loaded`];
       }
 
-      if (
-        toTokenInfo.maxGlobalShortSize &&
-        toTokenInfo.maxGlobalShortSize.gt(0) &&
-        toTokenInfo.maxAvailableShort &&
-        sizeUsd.gt(toTokenInfo.maxAvailableShort)
-      ) {
-        return [t`Max ${toTokenInfo.symbol} short exceeded`];
+      if (suitableMarket?.name === 'GMX') {
+        if (
+          toTokenInfo.maxGlobalShortSize &&
+          toTokenInfo.maxGlobalShortSize.gt(0) &&
+          toTokenInfo.maxAvailableShort &&
+          sizeUsd.gt(toTokenInfo.maxAvailableShort)
+        ) {
+          return [t`Max ${toTokenInfo.symbol} short exceeded`];
+        }
+      } else if (suitableMarket?.name === 'GNS') {
+        if (
+          liquidity &&
+          ((sizeUsd / 10**USD_DECIMALS) > (liquidity[suitableMarket?.name].value))
+        ) {
+          return [t`Max ${toTokenInfo.symbol} short exceeded`];
+        }
       }
+      
 
       stableTokenAmount = stableTokenAmount.add(sizeTokens);
       if (stableTokenAmount.gt(shortCollateralToken.availableAmount)) {

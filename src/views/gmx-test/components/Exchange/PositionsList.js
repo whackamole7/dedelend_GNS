@@ -505,14 +505,16 @@ export default function PositionsList(props) {
             position.deltaPercentageStr = deltaPercentageStr;
             position.deltaBeforeFeesStr = deltaStr;
             
+            const markPrice = position.markPrice / 10**12;
+            const collateral = position.collateral / 10**12;
+            const liqPriceDistance = (markPrice * (collateral * 0.9) / collateral / position.leverage).toString();
+            
+            const liqPrice = (isLong ?
+              markPrice.sub(liqPriceDistance)
+              : markPrice.add(liqPriceDistance)) * 10**12;
+            
             position.leverage = position.leverage * 10**4;
-            
-            const liqPriceDistance = position.markPrice * (position.collateral * 0.9) / position.collateral / position.leverage;
 
-            const liqPrice = isLong ?
-              position.markPrice - liqPriceDistance
-              : position.markPrice + liqPriceDistance;
-            
             const positionOrders = [];
             return (
               <PositionsItem
