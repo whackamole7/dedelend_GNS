@@ -1,6 +1,6 @@
 {
-  "homepage": "/",
-  "name": "dedelend-interface",
+  "homepage": "https://whackamole7.github.io/dedelend_GNS/",
+  "name": "dedelend-aggregator",
   "version": "0.2.0",
   "private": false,
   "dependencies": {

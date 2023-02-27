@@ -300,30 +300,53 @@ export default function PositionsList(props) {
               }
               
               const position = Object.assign({}, pos);
-
+  
               position.market = "GNS";
               const key = `${position.pairIndex}${position.index}`;
               const isLong = position.buy;
-
+              position.isLong = isLong;
+  
               const tokenSymb = GNS_PAIRS[position.pairIndex];
               const tokenAddr = Object.keys(infoTokens).find(addr => infoTokens[addr].symbol === tokenSymb);
               const curPrice = infoTokens[tokenAddr].maxPrice;
-
+  
               position.indexToken = {
                 symbol: tokenSymb,
               };
-              position.size = position.positionSizeDai;
+              position.size = BigNumber.from(position.positionSizeDai + '0'.repeat(12)).mul(position.leverage);
+              position.markPrice = curPrice;
+              position.averagePrice = BigNumber.from(position.openPrice + '0'.repeat(20));
+              position.collateral = BigNumber.from(position.positionSizeDai + '0'.repeat(12));
               
               let hasPositionProfit;
               if (isLong) {
-                hasPositionProfit = (curPrice / 10**20) > (position.openPrice.toString());
+                hasPositionProfit = position.markPrice.gte(position.averagePrice);
               } else {
-                hasPositionProfit = (curPrice / 10**20) < (position.openPrice.toString());
+                hasPositionProfit = position.markPrice.lte(position.averagePrice);
               }
+              position.hasProfit = hasPositionProfit;
+  
               
+              const priceDelta = position.averagePrice.gt(position.markPrice)
+              ? position.averagePrice.sub(position.markPrice)
+              : position.markPrice.sub(position.averagePrice);
+              position.delta = position.size.mul(priceDelta).div(position.averagePrice);
+              
+              position.deltaPercentage = position.delta.mul(BASIS_POINTS_DIVISOR).div(position.collateral);
+              
+              const { deltaStr, deltaPercentageStr } = getDeltaStr({
+                delta: position.delta,
+                deltaPercentage: position.deltaPercentage,
+                hasProfit: position.hasProfit,
+              });
+  
+              position.deltaStr = deltaStr;
+              position.deltaPercentageStr = deltaPercentageStr;
+              position.deltaBeforeFeesStr = deltaStr;
+              
+              position.leverage = position.leverage * 10**4;
               const positionOrders = [];
-              const positionDelta = 0;
-              const liqPrice = 0; 
+              const liqPrice = 0;
               
               return (
                 <PositionsItem
@@ -334,15 +357,13 @@ export default function PositionsList(props) {
                   positionOrders={positionOrders}
                   showPnlAfterFees={showPnlAfterFees}
                   hasPositionProfit={hasPositionProfit}
-                  positionDelta={positionDelta}
+                  positionDelta={position.delta}
                   liquidationPrice={liqPrice}
                   cx={cx}
                   // borrowFeeUSD={borrowFeeUSD}
                   editPosition={editPosition}
                   sellPosition={sellPosition}
-                  setStopLoss={setStopLoss}
-                  setTakeProft={setTakeProfit}
-                  isLarge={false}
+                  isLarge={true}
                 />
               );
             })}

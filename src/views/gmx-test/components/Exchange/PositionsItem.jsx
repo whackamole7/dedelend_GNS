@@ -5,14 +5,9 @@ import { ImSpinner2 } from 'react-icons/im';
 import { t } from '@lingui/macro';
 import { USD_DECIMALS, INCREASE } from './../../lib/legacy';
 import StatsTooltipRow from '../StatsTooltip/StatsTooltipRow';
-import { floor } from './../../../../components/utils/math';
-import CollateralLocked from './CollateralLocked';
-import { DDL_AccountManagerToken, getDgContract, WETH_address } from '../../../../components/utils/contracts';
-import { DDL_GMX } from './../../../../components/utils/contracts';
-import { useState, useEffect } from 'react';
 import { Trans } from '@lingui/macro';
-import { BigNumber } from 'ethers';
-import { ADDRESS_ZERO } from '@uniswap/v3-sdk';
+import './PositionsItem.scss';
+import icon_edit from '../../../../img/icon-edit.svg';
 
 const PositionsItem = (props) => {
 	const {
@@ -128,6 +123,16 @@ const PositionsItem = (props) => {
 								);
 							}}
 						/>
+						{position.market === 'GMX' && (
+							<button
+								className='edit-btn'
+								onClick={() => {
+									editPosition(position);
+								}}
+							>
+								<img src={icon_edit} alt="Edit position button" />
+							</button>
+						)}
 					</td>
 					<td onClick={() => {
 						// onPositionClick(position)
@@ -213,6 +218,7 @@ const PositionsItem = (props) => {
 						</div>
 						<div>
 							<div className="Exchange-list-token">{position.indexToken.symbol}</div>
+							<img className='market-logo' src={marketImg} alt={`${position.market} icon`} />
 							<span
 								className={cx("Exchange-list-side", {
 									positive: position.isLong,
@@ -273,7 +279,7 @@ const PositionsItem = (props) => {
 					</div>
 					<div className="App-card-row">
 						<div className="label">
-							Collteral
+							Collateral
 						</div>
 						<div>
 							<Tooltip
@@ -305,6 +311,16 @@ const PositionsItem = (props) => {
 									);
 								}}
 							/>
+							{position.market === 'GMX' && (
+								<button
+									className='edit-btn'
+									onClick={() => {
+										editPosition(position);
+									}}
+								>
+									<img src={icon_edit} alt="Edit position button" />
+								</button>
+							)}
 						</div>
 					</div>
 					

@@ -400,7 +400,7 @@ export default function SwapBox(props) {
     );
   };
 
-  const { data: liquidity, error: liquidityError } = useSWR(
+  const { data: liquidityData, error: liquidityDataError } = useSWR(
     active && [active, chainId, GNS_Storage.address, toTokenInfo, "getLiquidity", account],
     async () => {
       const liqs = {};
@@ -447,6 +447,14 @@ export default function SwapBox(props) {
       return liqs;
     }
   );
+  const [liquidity, setLiquidity] = useState(null);
+  useEffect(() => {
+    if (!liquidityData) {
+      return;
+    }
+    
+    setLiquidity(liquidityData);
+  }, [liquidityData]);
 
   const [markets, setMarkets] = useLocalStorageByChainId(
     chainId,
@@ -512,9 +520,6 @@ export default function SwapBox(props) {
     }
 
     setSuitableMarket(markets.reduce((result, market) => {
-      if (!liquidity) {
-        return market;
-      }
       if (liquidity[result.name]?.value > liquidity[market.name]?.value) {
         return result;
       }
@@ -2379,7 +2384,7 @@ export default function SwapBox(props) {
                 Available Liquidity
               </div>
               <div className="align-right icon-container">
-                {(suitableMarket?.name === 'GMX' && '$')}
+                {suitableMarket?.name === 'GMX' && '$'}
                 {suitableMarket && liquidity && (
                   liquidity[suitableMarket?.name]?.formattedValue
                   + ' ' + liquidity[suitableMarket?.name]?.symbol
