@@ -10,8 +10,9 @@ const ChooseMarketModal = (props) => {
 		marketsList,
 		setMarkets,
 		markets,
-		liq,
+		liqs,
 	} = props;
+
 
 	const [draftMarkets, setDraftMarkets] = useState(markets);
 
@@ -31,8 +32,11 @@ const ChooseMarketModal = (props) => {
 				{
 					marketsList.map(market => {
 						const icon = require(`../../../img/icon-${market.name}.svg`).default;
-						const liqInfo = liq[market.name];
-						console.log(liqInfo);
+						if (!liqs) {
+							return;
+						}
+						
+						const liqInfo = liqs[market.name];
 
 						return (
 							<div
@@ -66,9 +70,9 @@ const ChooseMarketModal = (props) => {
 											Available Liquidity
 										</div>
 										<div className="text-table__right">
-											{liqInfo?.market === 'GMX'
+											{market.name === 'GMX'
 												&& '$'}
-											{liqInfo?.formattedValue}{liqInfo?.symbol}
+											{liqInfo?.formattedValue} {liqInfo?.symbol}
 										</div>
 									</div>
 								</div>
