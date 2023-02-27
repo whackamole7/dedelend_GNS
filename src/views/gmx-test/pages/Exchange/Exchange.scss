@@ -326,7 +326,8 @@
   .ExchangeChart {
     position: relative;
     // height: 49.6rem;
-    height: 55.4rem;
+    // height: 55.4rem;
+    height: 100%;
   }
   
   .ExchangeChart-title {
@@ -434,7 +435,11 @@
     /* top: 6.975rem; */
     top: 14.5rem;
     z-index: 1;
-    height: 405px;
+    // height: 405px;
+
+    .tv-lightweight-charts {
+      max-height: 100%;
+    }
 
     @media (max-width: 1200px) {
       height: auto;

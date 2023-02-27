@@ -50,7 +50,6 @@ import Tab from "../../components/Tab/Tab";
 import "./Exchange.scss";
 import "../../components/Exchange/Exchange-lists.scss";
 import { fetcher } from "../../lib/contracts/fetcher";
-import { DDL_AccountManager, USDC } from "../../../../components/utils/contracts";
 import GNS_Storage from "../../abis/GNS/GNS_Storage.json";
 import { GNS_PAIRS } from './../../lib/GNS_legacy';
 import { ADDRESS_ZERO } from '@uniswap/v3-sdk';
@@ -199,7 +198,6 @@ export function getPositions(
       hasProfit: positionData[i * propsLength + 7].eq(1),
       delta: positionData[i * propsLength + 8],
       markPrice: isLong[i] ? indexToken.minPrice : indexToken.maxPrice,
-      ddl: {},
     };
 
 
@@ -569,7 +567,7 @@ export const Exchange = forwardRef((props, ref) => {
   );
 
   const { data: positionRouterApproved } = useSWR(
-    active && [active, chainId, routerAddress, "approvedPlugins", account, DDL_AccountManager.address],
+    active && [active, chainId, routerAddress, "approvedPlugins", account, positionRouterAddress],
     {
       fetcher: fetcher(library, Router),
     }
@@ -822,7 +820,7 @@ export const Exchange = forwardRef((props, ref) => {
 
   const approvePositionRouter = ({ sentMsg, failMsg }) => {
     setIsPositionRouterApproving(true);
-    return approvePlugin(chainId, DDL_AccountManager.address, {
+    return approvePlugin(chainId, positionRouterAddress, {
       library,
       pendingTxns,
       setPendingTxns,

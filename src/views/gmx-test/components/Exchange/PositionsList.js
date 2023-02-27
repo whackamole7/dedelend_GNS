@@ -102,7 +102,6 @@ export default function PositionsList(props) {
     minExecutionFeeErrorMessage,
     usdgSupply,
     totalTokenWeights,
-    openModal,
   } = props;
 
   const hasPositions = Boolean(positions?.length || positionsGNS?.length);
@@ -507,9 +506,14 @@ export default function PositionsList(props) {
             position.deltaBeforeFeesStr = deltaStr;
             
             position.leverage = position.leverage * 10**4;
-            const positionOrders = [];
-            const liqPrice = 0;
             
+            const liqPriceDistance = position.markPrice * (position.collateral * 0.9) / position.collateral / position.leverage;
+
+            const liqPrice = isLong ?
+              position.markPrice - liqPriceDistance
+              : position.markPrice + liqPriceDistance;
+            
+            const positionOrders = [];
             return (
               <PositionsItem
                 key={key}

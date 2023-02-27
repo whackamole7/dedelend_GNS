@@ -92,7 +92,6 @@ import NoLiquidityErrorModal from "./NoLiquidityErrorModal";
 import StatsTooltipRow from "../StatsTooltip/StatsTooltipRow";
 import { fetcher } from "../../lib/contracts/fetcher";
 import { callContract } from "../../lib/contracts/callContract";
-import { DDL_AccountManager, DDL_AccountManager_abi, USDC } from './../../../../components/utils/contracts';
 import icon_settings from '../../../../img/icon-settings.svg';
 import ChooseMarketModal from './../../../../components/UI/modal/ChooseMarketModal';
 import { separateThousands } from './../../../../components/utils/sepThousands';
@@ -103,6 +102,7 @@ import { GNS_PAIRS, WEI_DECIMALS } from './../../lib/GNS_legacy';
 import { DEFAULT_SLIPPAGE_AMOUNT } from './../../lib/legacy';
 import SLTPModal from './../../../../components/UI/modal/SLTPModal';
 import { signer } from './../../../../components/utils/providers';
+import { USDC } from '../../../../components/utils/contracts';
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -429,7 +429,7 @@ export default function SwapBox(props) {
             break;
           case 'GNS':
             liq = Number(
-              (GNS_Info.maxOpenInterest?.sub(GNS_Info.openInterest) + '0'.repeat(12)) / (toTokenInfo?.maxPrice)
+              (GNS_Info.maxOpenInterest?.sub(GNS_Info.openInterest) + '0'.repeat(12)) / 10**USD_DECIMALS
             );
             
             break;
@@ -443,8 +443,6 @@ export default function SwapBox(props) {
           symbol,
         }
       })
-
-      console.log('tick');
       
       return liqs;
     }
@@ -1055,9 +1053,12 @@ export default function SwapBox(props) {
       return [t`Enter a price`];
     }
 
-    if (!hasExistingPosition && fromUsdMin && fromUsdMin.lt(expandDecimals(10, USD_DECIMALS))) {
+    if (!hasExistingPosition && fromUsdMin && fromUsdMin.lt(expandDecimals(0, USD_DECIMALS))) {
       return [t`Min order: 10 USD`];
     }
+    // if (!hasExistingPosition && fromUsdMin && fromUsdMin.lt(expandDecimals(10, USD_DECIMALS))) {
+    //   return [t`Min order: 10 USD`];
+    // }
 
     if (leverage && leverage.lt(1.1 * BASIS_POINTS_DIVISOR)) {
       return [t`Min leverage: 1.1x`];
@@ -2389,10 +2390,8 @@ export default function SwapBox(props) {
                 Available Liquidity
               </div>
               <div className="align-right icon-container">
-                {suitableMarket?.name === 'GMX' && '$'}
-                {suitableMarket && liquidity && (
+                ${suitableMarket && liquidity && (
                   liquidity[suitableMarket?.name]?.formattedValue
-                  + ' ' + liquidity[suitableMarket?.name]?.symbol
                 )}
               </div>
             </div>

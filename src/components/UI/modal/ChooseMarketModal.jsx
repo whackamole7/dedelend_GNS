@@ -70,9 +70,7 @@ const ChooseMarketModal = (props) => {
 											Available Liquidity
 										</div>
 										<div className="text-table__right">
-											{market.name === 'GMX'
-												&& '$'}
-											{liqInfo?.formattedValue} {liqInfo?.symbol}
+											${liqInfo?.formattedValue}
 										</div>
 									</div>
 								</div>
