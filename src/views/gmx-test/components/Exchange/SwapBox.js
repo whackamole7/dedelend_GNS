@@ -444,6 +444,8 @@ export default function SwapBox(props) {
         }
       })
 
+      console.log('tick');
+      
       return liqs;
     }
   );
@@ -520,6 +522,9 @@ export default function SwapBox(props) {
     }
 
     setSuitableMarket(markets.reduce((result, market) => {
+      if (!liquidity) {
+        return market;
+      }
       if (liquidity[result.name]?.value > liquidity[market.name]?.value) {
         return result;
       }
