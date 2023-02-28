@@ -34,6 +34,7 @@ import GNS_Trading from '../../abis/GNS/GNS_Trading.json';
 import { notifySuccess } from './../../../../components/utils/notifications';
 import { ethers } from 'ethers';
 import { BigNumber } from 'ethers';
+import { expandDecimals } from './../../lib/legacy';
 
 const getOrdersForPosition = (account, position, orders, nativeTokenAddress) => {
   if (!orders || orders.length === 0) {
@@ -289,6 +290,8 @@ export default function PositionsList(props) {
                   borrowFeeUSD={borrowFeeUSD}
                   editPosition={editPosition}
                   sellPosition={sellPosition}
+                  setStopLoss={setStopLoss}
+                  setTakeProfit={setTakeProfit}
                   isLarge={false}
                 />
               );
@@ -362,6 +365,8 @@ export default function PositionsList(props) {
                   // borrowFeeUSD={borrowFeeUSD}
                   editPosition={editPosition}
                   sellPosition={sellPosition}
+                  setStopLoss={setStopLoss}
+                  setTakeProfit={setTakeProfit}
                   isLarge={true}
                 />
               );
@@ -450,7 +455,7 @@ export default function PositionsList(props) {
                 editPosition={editPosition}
                 sellPosition={sellPosition}
                 setStopLoss={setStopLoss}
-                setTakeProft={setTakeProfit}
+                setTakeProfit={setTakeProfit}
                 isLarge={true}
               />
             );
@@ -505,13 +510,13 @@ export default function PositionsList(props) {
             position.deltaPercentageStr = deltaPercentageStr;
             position.deltaBeforeFeesStr = deltaStr;
             
-            const markPrice = position.markPrice / 10**12;
-            const collateral = position.collateral / 10**12;
-            const liqPriceDistance = (markPrice * (collateral * 0.9) / collateral / position.leverage).toString();
+            const markPrice = position.markPrice;
+            const collateral = position.collateral.mul(position.leverage);
+            const liqPriceDistance = (markPrice.mul(collateral.mul(9).div(10)).div(collateral).div(position.leverage));
             
-            const liqPrice = (isLong ?
-              markPrice.sub(liqPriceDistance)
-              : markPrice.add(liqPriceDistance)) * 10**12;
+            const liqPrice = isLong ?
+                markPrice.sub(liqPriceDistance)
+                : markPrice.add(liqPriceDistance);
             
             position.leverage = position.leverage * 10**4;
 
@@ -531,6 +536,8 @@ export default function PositionsList(props) {
                 // borrowFeeUSD={borrowFeeUSD}
                 editPosition={editPosition}
                 sellPosition={sellPosition}
+                setStopLoss={setStopLoss}
+                setTakeProfit={setTakeProfit}
                 isLarge={true}
               />
             );

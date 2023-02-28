@@ -363,6 +363,8 @@ export default function SwapBox(props) {
   const toToken = getToken(chainId, toTokenAddress);
   const shortCollateralToken = getTokenInfo(infoTokens, shortCollateralAddress);
 
+  
+
   const fromTokenInfo = getTokenInfo(infoTokens, fromTokenAddress);
   const toTokenInfo = getTokenInfo(infoTokens, toTokenAddress);
 
@@ -529,6 +531,12 @@ export default function SwapBox(props) {
       return market;
     }))
   });
+
+  useEffect(() => {
+    if (suitableMarket?.name === 'GNS') {
+      setFromTokenAddress(isLong ? LONG : SHORT, getTokenBySymbol(chainId, 'DAI').address);
+    }
+  }, [suitableMarket]);
 
   
 
@@ -865,63 +873,94 @@ export default function SwapBox(props) {
   }
 
   let nextAveragePrice = isMarketOrder ? entryMarkPrice : triggerPriceUsd;
-  if (hasExistingPosition) {
-    let nextDelta, nextHasProfit;
-
-    if (isMarketOrder) {
-      nextDelta = existingPosition.delta;
-      nextHasProfit = existingPosition.hasProfit;
-    } else {
-      const data = calculatePositionDelta(triggerPriceUsd || bigNumberify(0), existingPosition);
-      nextDelta = data.delta;
-      nextHasProfit = data.hasProfit;
+  if (suitableMarket?.name === 'GNS') {
+    if (toTokenInfo.maxPrice) {
+      nextAveragePrice = isLong ?
+        BigNumber.from(formatAmount(toTokenInfo.maxPrice, 4, 0, 0)).mul(10004)
+        : BigNumber.from(formatAmount(toTokenInfo.maxPrice, 4, 0, 0)).mul(9996);
     }
-
-    nextAveragePrice = getNextAveragePrice({
-      size: existingPosition.size,
-      sizeDelta: toUsdMax,
-      hasProfit: nextHasProfit,
-      delta: nextDelta,
-      nextPrice: isMarketOrder ? entryMarkPrice : triggerPriceUsd,
-      isLong,
-    });
+  }
+  
+  if (suitableMarket?.name === 'GMX') {
+    if (hasExistingPosition) {
+      let nextDelta, nextHasProfit;
+  
+      if (isMarketOrder) {
+        nextDelta = existingPosition.delta;
+        nextHasProfit = existingPosition.hasProfit;
+      } else {
+        const data = calculatePositionDelta(triggerPriceUsd || bigNumberify(0), existingPosition);
+        nextDelta = data.delta;
+        nextHasProfit = data.hasProfit;
+      }
+  
+      nextAveragePrice = getNextAveragePrice({
+        size: existingPosition.size,
+        sizeDelta: toUsdMax,
+        hasProfit: nextHasProfit,
+        delta: nextDelta,
+        nextPrice: isMarketOrder ? entryMarkPrice : triggerPriceUsd,
+        isLong,
+      });
+    }
   }
 
-  const liquidationPrice = getLiquidationPrice({
-    isLong,
-    size: hasExistingPosition ? existingPosition.size : bigNumberify(0),
-    collateral: hasExistingPosition ? existingPosition.collateral : bigNumberify(0),
-    averagePrice: nextAveragePrice,
-    entryFundingRate: hasExistingPosition ? existingPosition.entryFundingRate : bigNumberify(0),
-    cumulativeFundingRate: hasExistingPosition ? existingPosition.cumulativeFundingRate : bigNumberify(0),
-    sizeDelta: toUsdMax,
-    collateralDelta: fromUsdMin,
-    increaseCollateral: true,
-    increaseSize: true,
-  });
+  if (suitableMarket?.name === 'GMX') {
+    if (hasExistingPosition) {
+      const collateralDelta = fromUsdMin ? fromUsdMin : bigNumberify(0);
+      const sizeDelta = toUsdMax ? toUsdMax : bigNumberify(0);
+      leverage = getLeverage({
+        size: existingPosition.size,
+        sizeDelta,
+        collateral: existingPosition.collateral,
+        collateralDelta,
+        increaseCollateral: true,
+        entryFundingRate: existingPosition.entryFundingRate,
+        cumulativeFundingRate: existingPosition.cumulativeFundingRate,
+        increaseSize: true,
+        hasProfit: existingPosition.hasProfit,
+        delta: existingPosition.delta,
+        includeDelta: savedIsPnlInLeverage,
+      });
+    } else if (hasLeverageOption) {
+      leverage = bigNumberify(parseInt(leverageOption * BASIS_POINTS_DIVISOR));
+    }
+  } else if (suitableMarket?.name === 'GNS') {
+    leverage = bigNumberify(parseInt(leverageOption * BASIS_POINTS_DIVISOR));
+  }
+  
+  let liquidationPrice;
+  // const feesGNS = fromAmount && BigNumber.from(formatAmount(fromAmount.mul(leverage), 3, 0, 0)).mul(12);
+  if (suitableMarket?.name === 'GMX') {
+    liquidationPrice = getLiquidationPrice({
+      isLong,
+      size: hasExistingPosition ? existingPosition.size : bigNumberify(0),
+      collateral: hasExistingPosition ? existingPosition.collateral : bigNumberify(0),
+      averagePrice: nextAveragePrice,
+      entryFundingRate: hasExistingPosition ? existingPosition.entryFundingRate : bigNumberify(0),
+      cumulativeFundingRate: hasExistingPosition ? existingPosition.cumulativeFundingRate : bigNumberify(0),
+      sizeDelta: toUsdMax,
+      collateralDelta: fromUsdMin,
+      increaseCollateral: true,
+      increaseSize: true,
+    });
+  } else if (suitableMarket?.name === 'GNS') {
+    if (fromAmount && toTokenInfo.maxPrice && leverage) {
+      const markPrice = toTokenInfo.maxPrice;
+      const collateral = fromAmount.mul(leverage);
+      
+      const liqPriceDistance = (markPrice.mul(collateral.mul(9).div(10)).div(collateral).div(formatAmount(leverage, 4, 0, 0)));
+
+      liquidationPrice = (isLong ?
+          markPrice.sub(liqPriceDistance)
+          : markPrice.add(liqPriceDistance));
+    }
+  }
 
   const existingLiquidationPrice = existingPosition ? getLiquidationPrice(existingPosition) : undefined;
   let displayLiquidationPrice = liquidationPrice ? liquidationPrice : existingLiquidationPrice;
-
-  if (hasExistingPosition) {
-    const collateralDelta = fromUsdMin ? fromUsdMin : bigNumberify(0);
-    const sizeDelta = toUsdMax ? toUsdMax : bigNumberify(0);
-    leverage = getLeverage({
-      size: existingPosition.size,
-      sizeDelta,
-      collateral: existingPosition.collateral,
-      collateralDelta,
-      increaseCollateral: true,
-      entryFundingRate: existingPosition.entryFundingRate,
-      cumulativeFundingRate: existingPosition.cumulativeFundingRate,
-      increaseSize: true,
-      hasProfit: existingPosition.hasProfit,
-      delta: existingPosition.delta,
-      includeDelta: savedIsPnlInLeverage,
-    });
-  } else if (hasLeverageOption) {
-    leverage = bigNumberify(parseInt(leverageOption * BASIS_POINTS_DIVISOR));
-  }
+  
+  
 
   const getSwapError = () => {
     if (IS_NETWORK_DISABLED[chainId]) {
@@ -1053,22 +1092,31 @@ export default function SwapBox(props) {
       return [t`Enter a price`];
     }
 
-    if (!hasExistingPosition && fromUsdMin && fromUsdMin.lt(expandDecimals(0, USD_DECIMALS))) {
-      return [t`Min order: 10 USD`];
+    if (suitableMarket?.name === 'GMX') {
+      if (!hasExistingPosition && fromUsdMin && fromUsdMin.lt(expandDecimals(10, USD_DECIMALS))) {
+        return [t`Min order: 10 USD`];
+      }
+    } else if (suitableMarket?.name === 'GNS') {
+      if (fromUsdMin && (fromUsdMin.mul(leverage ?? 1)).lt(expandDecimals(7500, USD_DECIMALS + 4))) {
+        return [t`Min order: 7,500 DAI`];
+      }
     }
-    // if (!hasExistingPosition && fromUsdMin && fromUsdMin.lt(expandDecimals(10, USD_DECIMALS))) {
-    //   return [t`Min order: 10 USD`];
-    // }
 
-    if (leverage && leverage.lt(1.1 * BASIS_POINTS_DIVISOR)) {
-      return [t`Min leverage: 1.1x`];
-    }
 
     if (leverage) {
-      if (suitableMarket?.name === 'GMX' && leverage.gt(MAX_ALLOWED_LEVERAGE)) {
-        return [t`Max leverage: ${(MAX_ALLOWED_LEVERAGE / BASIS_POINTS_DIVISOR).toFixed(1)}x`];
-      } else if (suitableMarket?.name === 'GNS' && leverage.gt(150 * BASIS_POINTS_DIVISOR)) {
-        return [t`Max leverage: 150x`];
+      if (suitableMarket?.name === 'GMX') {
+        if (leverage.gt(MAX_ALLOWED_LEVERAGE)) {
+          return [t`Max leverage: ${(MAX_ALLOWED_LEVERAGE / BASIS_POINTS_DIVISOR).toFixed(1)}x`];
+        } else if (leverage.lt(1.1 * BASIS_POINTS_DIVISOR)) {
+          return [t`Min leverage: 1.1x`];
+        }
+        
+      } else if (suitableMarket?.name === 'GNS') {
+        if (leverage.gt(150 * BASIS_POINTS_DIVISOR)) {
+          return [t`Max leverage: 150x`];
+        } else if (leverage.lt(2 * BASIS_POINTS_DIVISOR)) {
+          return [t`Min leverage: 2x`];
+        }
       }
     }
 
@@ -2132,7 +2180,7 @@ export default function SwapBox(props) {
               <div className="Exchange-swap-section-top">
                 <div className="muted">
                   {fromUsdMin && (
-                    <div className="Exchange-swap-usd">Pay: {formatAmount(fromUsdMin, USD_DECIMALS, 2, true)} USD</div>
+                    <div className="Exchange-swap-usd">Pay: {formatAmount(fromUsdMin, USD_DECIMALS, 2, true)} {suitableMarket?.name === 'GMX' && 'USD'}{suitableMarket?.name === 'GNS' && 'DAI'}</div>
                   )}
                   {!fromUsdMin && "Pay"}
                 </div>
@@ -2166,17 +2214,21 @@ export default function SwapBox(props) {
                 </div>
                 <div>
                   {/* Tokens control */}
-                  <TokenSelector
-                    label="Pay"
-                    chainId={chainId}
-                    tokenAddress={fromTokenAddress}
-                    onSelectToken={onSelectFromToken}
-                    tokens={fromTokens}
-                    infoTokens={infoTokens}
-                    showMintingCap={false}
-                    showTokenImgInDropdown={true}
-                  />
-                  {/* <div className="TokenSelector-dummy">USDC</div> */}
+                  {suitableMarket?.name === 'GMX' &&
+                    <TokenSelector
+                      label="Pay"
+                      chainId={chainId}
+                      tokenAddress={fromTokenAddress}
+                      onSelectToken={onSelectFromToken}
+                      tokens={fromTokens}
+                      infoTokens={infoTokens}
+                      showMintingCap={false}
+                      showTokenImgInDropdown={true}
+                    />}
+                  {suitableMarket?.name === 'GNS' &&
+                    <div className="TokenSelector-dummy">DAI</div>
+                  }
+                  
                 </div>
               </div>
             </div>
@@ -2412,16 +2464,22 @@ export default function SwapBox(props) {
                 </div>
 
                 <div className="align-right">
-                  <TokenSelector
-                    label="Collateral In"
-                    chainId={chainId}
-                    tokenAddress={shortCollateralAddress}
-                    onSelectToken={onSelectShortCollateralAddress}
-                    tokens={stableTokens}
-                    showTokenImgInDropdown={true}
-                    disabled={false}
-                  />
-                  {/* USDC */}
+                  {
+                    suitableMarket?.name === 'GMX' &&
+                      <TokenSelector
+                        label="Collateral In"
+                        chainId={chainId}
+                        tokenAddress={shortCollateralAddress}
+                        onSelectToken={onSelectShortCollateralAddress}
+                        tokens={stableTokens}
+                        showTokenImgInDropdown={true}
+                        disabled={false}
+                      />
+                  }
+                  {
+                    suitableMarket?.name === 'GNS' &&
+                      'DAI'
+                  }
                 </div>
               </div>
             )}
@@ -2431,24 +2489,14 @@ export default function SwapBox(props) {
                   <Trans>Collateral In</Trans>
                 </div>
                 <div className="align-right">
-                  <Tooltip
-                    position="right-bottom"
-                    handle="USD"
-                    renderContent={() => (
-                      <span className="SwapBox-collateral-tooltip-text">
-                        <Trans>
-                          A snapshot of the USD value of your {existingPosition?.collateralToken?.symbol} collateral is
-                          taken when the position is opened.
-                        </Trans>
-                        <br />
-                        <br />
-                        <Trans>
-                          When closing the position, you can select which token you would like to receive the profits
-                          in.
-                        </Trans>
-                      </span>
-                    )}
-                  />
+                  {
+                    suitableMarket?.name === 'GMX' &&
+                      'USD'
+                  }
+                  {
+                    suitableMarket?.name === 'GNS' &&
+                      'DAI'
+                  }
                 </div>
               </div>
             )}
@@ -2457,12 +2505,15 @@ export default function SwapBox(props) {
                 <Trans>Entry Price</Trans>
               </div>
               <div className="align-right">
-                {hasExistingPosition && toAmount && toAmount.gt(0) && (
-                  <div className="inline-block muted">
-                    ${formatAmount(existingPosition.averagePrice, USD_DECIMALS, 2, true)}
-                    <BsArrowRight className="transition-arrow" />
-                  </div>
-                )}
+                  {
+                    suitableMarket?.name === 'GMX' &&
+                    hasExistingPosition && toAmount && toAmount.gt(0) && (
+                      <div className="inline-block muted">
+                        ${formatAmount(existingPosition.averagePrice, USD_DECIMALS, 2, true)}
+                        <BsArrowRight className="transition-arrow" />
+                      </div>
+                    )
+                  }
                 {nextAveragePrice && `$${formatAmount(nextAveragePrice, USD_DECIMALS, 2, true)}`}
                 {!nextAveragePrice && `-`}
               </div>
@@ -2472,12 +2523,15 @@ export default function SwapBox(props) {
                 <Trans>Liq. Price</Trans>
               </div>
               <div className="align-right">
-                {hasExistingPosition && toAmount && toAmount.gt(0) && (
-                  <div className="inline-block muted">
-                    ${formatAmount(existingLiquidationPrice, USD_DECIMALS, 2, true)}
-                    <BsArrowRight className="transition-arrow" />
-                  </div>
-                )}
+                {
+                  suitableMarket?.name === 'GMX' &&
+                  hasExistingPosition && toAmount && toAmount.gt(0) && (
+                    <div className="inline-block muted">
+                      ${formatAmount(existingLiquidationPrice, USD_DECIMALS, 2, true)}
+                      <BsArrowRight className="transition-arrow" />
+                    </div>
+                  )
+                }
                 {toAmount &&
                   displayLiquidationPrice &&
                   `$${formatAmount(displayLiquidationPrice, USD_DECIMALS, 2, true)}`}
