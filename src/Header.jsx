@@ -202,8 +202,8 @@ const Header = (props) => {
 	const loc = useLocation();
 	const headerLinks = [
 		{
-			name: 'Perpetual Aggregator',
-			to: '/aggregator',
+			name: 'Unified Trading Terminal',
+			to: '/terminal',
 		},
 		{
 			name: 'Earn',

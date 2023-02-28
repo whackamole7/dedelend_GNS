@@ -36,6 +36,7 @@ import { cancelDecreaseOrder, handleCancelOrder } from "../../domain/legacy";
 import { getNativeToken, getToken, getWrappedToken } from "../../config/Tokens";
 import StatsTooltipRow from "../StatsTooltip/StatsTooltipRow";
 import SlippageInput from './../SlippageInput/SlippageInput';
+import NumberInput_v2 from './../../../../components/UI/input/NumberInput_v2';
 
 const HIGH_SPREAD_THRESHOLD = expandDecimals(1, USD_DECIMALS).div(100); // 1%;
 
@@ -109,6 +110,9 @@ export default function ConfirmationBox(props) {
     userSlippage,
     setUserSlippage,
     allowedSlippage,
+    market,
+    TPValue,
+    setTPValue,
   } = props;
 
   const nativeTokenSymbol = getConstant(chainId, "nativeTokenSymbol");
@@ -618,32 +622,42 @@ export default function ConfirmationBox(props) {
             </div>
           )}
           {orderOption === LIMIT && renderAvailableLiquidity()}
-          {isShort && (
+
+          <div className="row-divider" />
+          
+          {market === 'GMX' && isShort && (
             <ExchangeInfoRow label="Collateral In" isTop={true}>{getToken(chainId, shortCollateralAddress).symbol}</ExchangeInfoRow>
           )}
-          {isLong && <ExchangeInfoRow label="Collateral In" isTop={true} value={toTokenInfo.symbol} />}
-          <ExchangeInfoRow label="Leverage">
-            {hasExistingPosition && toAmount && toAmount.gt(0) && (
-              <div className="inline-block muted">
-                {formatAmount(existingPosition.leverage, 4, 2)}x
-                <BsArrowRight className="transition-arrow" />
-              </div>
-            )}
-            {toAmount && leverage && leverage.gt(0) && `${formatAmount(leverage, 4, 2)}x`}
-            {!toAmount && leverage && leverage.gt(0) && `-`}
-            {leverage && leverage.eq(0) && `-`}
-          </ExchangeInfoRow>
-          <ExchangeInfoRow label="Liq. Price">
-            {hasExistingPosition && toAmount && toAmount.gt(0) && (
-              <div className="inline-block muted">
-                ${formatAmount(existingLiquidationPrice, USD_DECIMALS, 2, true)}
-                <BsArrowRight className="transition-arrow" />
-              </div>
-            )}
-            {toAmount && displayLiquidationPrice && `$${formatAmount(displayLiquidationPrice, USD_DECIMALS, 2, true)}`}
-            {!toAmount && displayLiquidationPrice && `-`}
-            {!displayLiquidationPrice && `-`}
-          </ExchangeInfoRow>
+          {market === 'GMX' && isLong && <ExchangeInfoRow label="Collateral In" isTop={true} value={toTokenInfo.symbol} />}
+          {
+            market === 'GMX' &&
+            <ExchangeInfoRow label="Leverage">
+              {hasExistingPosition && toAmount && toAmount.gt(0) && (
+                <div className="inline-block muted">
+                  {formatAmount(existingPosition.leverage, 4, 2)}x
+                  <BsArrowRight className="transition-arrow" />
+                </div>
+              )}
+              {toAmount && leverage && leverage.gt(0) && `${formatAmount(leverage, 4, 2)}x`}
+              {!toAmount && leverage && leverage.gt(0) && `-`}
+              {leverage && leverage.eq(0) && `-`}
+            </ExchangeInfoRow>
+          }
+          {
+            market === 'GMX' &&
+            <ExchangeInfoRow label="Liq. Price">
+              {hasExistingPosition && toAmount && toAmount.gt(0) && (
+                <div className="inline-block muted">
+                  ${formatAmount(existingLiquidationPrice, USD_DECIMALS, 2, true)}
+                  <BsArrowRight className="transition-arrow" />
+                </div>
+              )}
+              {toAmount && displayLiquidationPrice && `$${formatAmount(displayLiquidationPrice, USD_DECIMALS, 2, true)}`}
+              {!toAmount && displayLiquidationPrice && `-`}
+              {!displayLiquidationPrice && `-`}
+            </ExchangeInfoRow>
+          }
+          
           <ExchangeInfoRow label="Fees">${formatAmount(feesUsd, USD_DECIMALS, 2, true)}</ExchangeInfoRow>
           <ExchangeInfoRow label="Collateral">
             <Tooltip
@@ -667,11 +681,24 @@ export default function ConfirmationBox(props) {
               }}
             />
           </ExchangeInfoRow>
-          {showSpread && (
-            <ExchangeInfoRow label="Spread" isWarning={spread.isHigh} isTop={true}>
-              {formatAmount(spread.value.mul(100), USD_DECIMALS, 2, true)}%
-            </ExchangeInfoRow>
-          )}
+          {
+            market === 'GMX' &&
+            showSpread && (
+              <ExchangeInfoRow label="Spread" isWarning={spread.isHigh} isTop={true}>
+                {formatAmount(spread.value.mul(100), USD_DECIMALS, 2, true)}%
+              </ExchangeInfoRow>
+            )
+          }
+          {
+            market === 'GNS' &&
+            <NumberInput_v2 
+              value={TPValue}
+              setValue={setTPValue}
+              placeholder={"Set Take Profit"}
+              fractionForbidden={true}
+            />
+          }
+          <div className="row-divider" />
           {isMarketOrder && (
             <ExchangeInfoRow label="Entry Price">
               {hasExistingPosition && toAmount && toAmount.gt(0) && (
@@ -689,13 +716,17 @@ export default function ConfirmationBox(props) {
               ${formatAmount(triggerPriceUsd, USD_DECIMALS, 2, true)}
             </ExchangeInfoRow>
           )}
-          <ExchangeInfoRow label="Borrow Fee">
-            {isLong && toTokenInfo && formatAmount(toTokenInfo.fundingRate, 4, 4)}
-            {isShort && shortCollateralToken && formatAmount(shortCollateralToken.fundingRate, 4, 4)}
-            {((isLong && toTokenInfo && toTokenInfo.fundingRate) ||
-              (isShort && shortCollateralToken && shortCollateralToken.fundingRate)) &&
-              "% / 1h"}
-          </ExchangeInfoRow>
+          {
+            market === 'GMX' &&
+            <ExchangeInfoRow label="Borrow Fee">
+              {isLong && toTokenInfo && formatAmount(toTokenInfo.fundingRate, 4, 4)}
+              {isShort && shortCollateralToken && formatAmount(shortCollateralToken.fundingRate, 4, 4)}
+              {((isLong && toTokenInfo && toTokenInfo.fundingRate) ||
+                (isShort && shortCollateralToken && shortCollateralToken.fundingRate)) &&
+                "% / 1h"}
+            </ExchangeInfoRow>
+          }
+          
           {isMarketOrder && (
             <div className="PositionEditor-allow-higher-slippage">
               <ExchangeInfoRow label="Execution Fee">

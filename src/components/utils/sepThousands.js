@@ -38,7 +38,12 @@ const removeNonNumeric = (num) => {
 }
 
 export const convertInputNum = (num) => {
-	return separateThousands(removeNonNumeric(num), ' ')
+	return separateThousands(removeNonNumeric(num), ' ');
+}
+
+export const nonFractionConvert = (num) => {
+	const val = (num).replace(/[^0-9]/g, '').replace(/^0\d/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+	return val;
 }
 
 

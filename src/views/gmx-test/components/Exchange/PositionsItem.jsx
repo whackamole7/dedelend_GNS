@@ -169,22 +169,32 @@ const PositionsItem = (props) => {
 						
 					</td>
 					<td>
-						<button
+						{/* <button
 							className="Exchange-list-action"
 							onClick={() => setStopLoss(position)}
 							disabled={position.size.eq(0)}
 						>
 							Set SL
-						</button>
+						</button> */}
+						—
 					</td>
 					<td>
-						<button
+						{/* <button
 							className="Exchange-list-action"
 							onClick={() => setTakeProfit(position)}
 							disabled={position.size.eq(0)}
 						>
 							Set TP
-						</button>
+						</button> */}
+						{position.market === 'GNS' &&
+							(
+								position.tp.eq(0) ?
+								'—' : ('$' + formatAmount(position.tp, 10, 2, true))
+							)
+						}
+						{position.market === 'GMX' &&
+							'—'
+						}
 					</td>
 					<td className="td-btn pos-relative">
 						<button
@@ -231,97 +241,9 @@ const PositionsItem = (props) => {
 					</div>
 					<div className="App-card-row">
 						<div className="label">
-							<Trans>Net Value</Trans>
-						</div>
-						<div>
-							<Tooltip
-								handle={`$${formatAmount(position.netValue, USD_DECIMALS, 2, true)}`}
-								position="right-bottom"
-								handleClassName="plain"
-								renderContent={() => {
-									return (
-										<>
-											Net Value:{" "}
-											{showPnlAfterFees
-												? "Initial Collateral - Fees + PnL"
-												: "Initial Collateral - Borrow Fee + PnL"}
-											<br />
-											<br />
-											<StatsTooltipRow
-												label="Initial Collateral"
-												value={formatAmount(position.collateral, USD_DECIMALS, 2, true)}
-											/>
-											<StatsTooltipRow label="PnL" value={position.deltaBeforeFeesStr} showDollar={false} />
-											<StatsTooltipRow
-												label="Borrow Fee"
-												value={formatAmount(position.fundingFee, USD_DECIMALS, 2, true)}
-											/>
-											<StatsTooltipRow
-												label="Open + Close fee"
-												value={formatAmount(position.positionFee, USD_DECIMALS, 2, true)}
-											/>
-											<StatsTooltipRow
-												label="PnL After Fees"
-												value={`${position.deltaAfterFeesStr} (${position.deltaAfterFeesPercentageStr})`}
-												showDollar={false}
-											/>
-										</>
-									);
-								}}
-							/>
-						</div>
-					</div>
-					<div className="App-card-row">
-						<div className="label">
 							Size
 						</div>
 						<div>${formatAmount(position.size, USD_DECIMALS, 2, true)}</div>
-					</div>
-					<div className="App-card-row">
-						<div className="label">
-							Collateral
-						</div>
-						<div>
-							<Tooltip
-								handle={`$${formatAmount(position.collateralAfterFee, USD_DECIMALS, 2, true)}`}
-								position="right-bottom"
-								handleClassName={cx("plain", { negative: position.hasLowCollateral })}
-								renderContent={() => {
-									return (
-										<>
-											{position.hasLowCollateral && (
-												<div>
-													WARNING: This position has a low amount of collateral after deducting borrowing
-													fees, deposit more collateral to reduce the position's liquidation risk.
-													<br />
-													<br />
-												</div>
-											)}
-											<StatsTooltipRow
-												label="Initial Collateral"
-												value={formatAmount(position.collateral, USD_DECIMALS, 2, true)}
-											/>
-											<StatsTooltipRow
-												label="Borrow Fee"
-												value={formatAmount(position.fundingFee, USD_DECIMALS, 2, true)}
-											/>
-											<StatsTooltipRow label={t`Borrow Fee / Day`} value={borrowFeeUSD} />
-											<span>Use the "Edit" button to deposit or withdraw collateral.</span>
-										</>
-									);
-								}}
-							/>
-							{position.market === 'GMX' && (
-								<button
-									className='edit-btn'
-									onClick={() => {
-										editPosition(position);
-									}}
-								>
-									<img src={icon_edit} alt="Edit position button" />
-								</button>
-							)}
-						</div>
 					</div>
 					
 				</div>
@@ -367,25 +289,39 @@ const PositionsItem = (props) => {
 						<div className="label">
 							Stop Loss
 						</div>
-						<button
+						{/* <button
 							className="Exchange-list-action"
 							onClick={() => setTakeProfit(position)}
 							disabled={position.size.eq(0)}
 						>
-							Set TP
-						</button>
+							Set SL
+						</button> */}
+						<div>
+							—
+						</div>
 					</div>
 					<div className="App-card-row">
 						<div className="label">
 							Take Profit
 						</div>
-						<button
+						{/* <button
 							className="Exchange-list-action"
 							onClick={() => setTakeProfit(position)}
 							disabled={position.size.eq(0)}
 						>
 							Set TP
-						</button>
+						</button> */}
+						<div>
+							{position.market === 'GNS' &&
+								(
+									position.tp.eq(0) ?
+									'—' : ('$' + formatAmount(position.tp, 10, 2, true))
+								)
+							}
+							{position.market === 'GMX' &&
+								'—'
+							}
+						</div>
 					</div>
 				</div>
 				<div className="App-card-divider"></div>

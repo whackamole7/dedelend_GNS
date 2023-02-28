@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { convertInputNum } from '../../utils/sepThousands';
 import Button from './../button/Button';
+import { nonFractionConvert } from './../../utils/sepThousands';
 
 const NumberInput_v2 = (props) => {
 	const {
@@ -8,8 +9,10 @@ const NumberInput_v2 = (props) => {
 		setValue,
 		setBtnActive,
 		currency,
-		hasError
+		hasError,
+		fractionForbidden,
 	} = props;
+
 
 	const [hasFocus, setHasFocus] = useState('');
 	const cls = (props.className ?? '') + (hasError ? ' error' : (hasFocus ? ' hlight' : ''));
@@ -24,7 +27,15 @@ const NumberInput_v2 = (props) => {
 					if (setBtnActive) {
 						setBtnActive(true)
 					}
-					setValue(convertInputNum(e.target.value))
+					if (fractionForbidden) {
+						setValue()
+					}
+
+					if (fractionForbidden) {
+						setValue(nonFractionConvert(e.target.value));
+					} else {
+						setValue(convertInputNum(e.target.value));
+					}
 				}}
 				
 				onFocus={() => {

@@ -62,3 +62,10 @@
 .Confirmation-box-main-icon {
   display: none;
 }
+
+
+.row-divider {
+  height: 1px;
+  background-color: #181A3C;
+  margin: 15px 0;
+}

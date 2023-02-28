@@ -346,10 +346,17 @@ export default function PositionsList(props) {
               position.deltaPercentageStr = deltaPercentageStr;
               position.deltaBeforeFeesStr = deltaStr;
               
-              position.leverage = position.leverage * 10**4;
-              const positionOrders = [];
-              const liqPrice = 0;
+              const markPrice = position.markPrice;
+              const collateral = position.collateral.mul(position.leverage);
+              const liqPriceDistance = (markPrice.mul(collateral.mul(9).div(10)).div(collateral).div(position.leverage));
               
+              const liqPrice = isLong ?
+                  markPrice.sub(liqPriceDistance)
+                  : markPrice.add(liqPriceDistance);
+              
+              position.leverage = position.leverage * 10**4;
+  
+              const positionOrders = [];
               return (
                 <PositionsItem
                   key={key}
@@ -367,7 +374,7 @@ export default function PositionsList(props) {
                   sellPosition={sellPosition}
                   setStopLoss={setStopLoss}
                   setTakeProfit={setTakeProfit}
-                  isLarge={true}
+                  isLarge={false}
                 />
               );
             })}

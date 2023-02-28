@@ -95,7 +95,7 @@ import { callContract } from "../../lib/contracts/callContract";
 import icon_settings from '../../../../img/icon-settings.svg';
 import ChooseMarketModal from './../../../../components/UI/modal/ChooseMarketModal';
 import { separateThousands } from './../../../../components/utils/sepThousands';
-import { floor } from './../../../../components/utils/math';
+import { floor, formatForContract } from './../../../../components/utils/math';
 import GNS_Storage from '../../abis/GNS/GNS_Storage.json';
 import GNS_Trading from '../../abis/GNS/GNS_Trading.json';
 import { GNS_PAIRS, WEI_DECIMALS } from './../../lib/GNS_legacy';
@@ -103,6 +103,7 @@ import { DEFAULT_SLIPPAGE_AMOUNT } from './../../lib/legacy';
 import SLTPModal from './../../../../components/UI/modal/SLTPModal';
 import { signer } from './../../../../components/utils/providers';
 import { USDC } from '../../../../components/utils/contracts';
+import { marketsList } from "../../../../components/utils/constants";
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -192,7 +193,6 @@ export default function SwapBox(props) {
     minExecutionFee,
     minExecutionFeeUSD,
     minExecutionFeeErrorMessage,
-    marketsList,
   } = props;
 
   
@@ -409,7 +409,8 @@ export default function SwapBox(props) {
       const curPairSymbol = toTokenInfo.symbol;
       
       const GNS_contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, signer);
-      const GNS_PairIndex = GNS_PAIRS.findIndex(pair => curPairSymbol === pair);
+      const GNS_PairIndex = toToken.symbol === 'UNI' ?
+        17 : GNS_PAIRS.findIndex(pair => toToken.symbol === pair);
       const GNS_Info = {
         openInterest: await GNS_contract.openInterestDai(GNS_PairIndex, 0),
         maxOpenInterest: await GNS_contract.openInterestDai(GNS_PairIndex, 2),
@@ -461,8 +462,9 @@ export default function SwapBox(props) {
   const [markets, setMarkets] = useLocalStorageByChainId(
     chainId,
     "Markets-Chosen",
-    marketsList
+    marketsList.slice()
   );
+  
   
   // Modal functionality
   const [modal, setModal] = useState('');
@@ -476,7 +478,7 @@ export default function SwapBox(props) {
   const renderModal = (position) => {
     switch(modal) {
       case 'Choose-Market':
-        return (
+        return ( markets.length &&
           <ChooseMarketModal
             visible={modalVisible}
             setVisible={setModalVisible}
@@ -1833,20 +1835,23 @@ export default function SwapBox(props) {
       });
   };
 
+  const [TPValue, setTPValue] = useState('');
   const openTrade = async () => {
     setIsSubmitting(true);
     
-    const pairIndex = GNS_PAIRS.findIndex(pair => toToken.symbol === pair);
+    const pairIndex = toToken.symbol === 'UNI' ?
+      17 : GNS_PAIRS.findIndex(pair => toToken.symbol === pair);
     const posSize = ethers.utils.parseEther(fromValue);
     const openPrice = (toTokenInfo.maxPrice.div('1' + '0'.repeat(20))).toString();
     const roundLeverage = leverage / 10**4;
     const typeOfOrder = isMarketOrder ? 0 : 1;
     const slippage = userSlippage * 10**10;
+    const takeProfit = String(formatForContract(TPValue, 10));
 
     const contract = new ethers.Contract(GNS_Trading.address, GNS_Trading.abi, library.getSigner());
 
     contract.openTrade(
-      [account, pairIndex, 0, 0, posSize, openPrice, isLong, roundLeverage, 0, 0],
+      [account, pairIndex, 0, 0, posSize, openPrice, isLong, roundLeverage, takeProfit, 0],
       typeOfOrder,
       0,
       slippage,
@@ -2041,8 +2046,14 @@ export default function SwapBox(props) {
       feeBps = feeBasisPoints;
     }
   } else if (toUsdMax) {
+
     positionFee = toUsdMax.mul(MARGIN_FEE_BASIS_POINTS).div(BASIS_POINTS_DIVISOR);
-    feesUsd = positionFee;
+    if (suitableMarket?.name === 'GMX') {
+      feesUsd = positionFee;
+    } else if (suitableMarket?.name === 'GNS') {
+      feesUsd = BigNumber.from(formatAmount(toUsdMax, 5, 0, 0)).mul(12);
+    }
+    
 
     const { feeBasisPoints } = getNextToAmount(
       chainId,
@@ -2750,6 +2761,9 @@ export default function SwapBox(props) {
           userSlippage={userSlippage}
           setUserSlippage={setUserSlippage}
           allowedSlippage={allowedSlippage}
+          market={suitableMarket?.name}
+          TPValue={TPValue}
+          setTPValue={setTPValue}
         />
       )}
       {renderModal()}

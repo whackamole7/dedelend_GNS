@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
 import './ChooseMarketModal.scss';
-import { useCallback, useEffect } from 'react';
+import { marketsList } from '../../utils/constants';
 
 const ChooseMarketModal = (props) => {
 	const {
 		visible,
 		setVisible,
-		marketsList,
 		setMarkets,
 		markets,
 		liqs,
@@ -22,7 +21,11 @@ const ChooseMarketModal = (props) => {
 			visible={visible}
 			setVisible={setVisible}
 			resetModal={() => {
-				setMarkets(draftMarkets);
+				if (draftMarkets.length) {
+					setMarkets(draftMarkets);
+				} else {
+					setMarkets(marketsList);
+				}
 			}}
 		>
 			<h1 className="ChooseMarket__title modal__title">
@@ -82,7 +85,11 @@ const ChooseMarketModal = (props) => {
 			<button 
 				className="ChooseMarket__btn btn btn_hlight"
 				onClick={() => {
-					setMarkets(draftMarkets);
+					if (draftMarkets.length) {
+						setMarkets(draftMarkets);
+					} else {
+						setMarkets(marketsList);
+					}
 					setVisible(false);
 				}}
 			>

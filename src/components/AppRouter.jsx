@@ -12,7 +12,7 @@ import MarginAccount from '../views/MarginAccount';
 import { HOMEPAGE_HREF } from './utils/constants';
 
 
-const AppRouter = ({ walletAddress, setWalletAddress, dgAddress, setRegisterVisible, account }) => {
+const AppRouter = ({ walletAddress, setWalletAddress, setRegisterVisible, account }) => {
 	// Supply Market state
 	const {userStats} = useContext(UserStatsContext)
 	const [supplyStep, setSupplyStep] = useState(0)
@@ -37,13 +37,12 @@ const AppRouter = ({ walletAddress, setWalletAddress, dgAddress, setRegisterVisi
 				path="/options"
 				element={<BorrowMarket walletAddress={walletAddress} setWalletAddress={setWalletAddress} />} 
 			/> */}
-			<Route path="/aggregator" element={
+			<Route path="/terminal" element={
 				<GMXInterface
 					connectWallet={() => {
 						connectWallet(setWalletAddress)
 					}}
 					walletAddress={walletAddress} 
-					dgAddress={dgAddress}
 					setRegisterVisible={setRegisterVisible} />
 			} />
 			<Route

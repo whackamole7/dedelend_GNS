@@ -55,16 +55,6 @@ import { GNS_PAIRS } from './../../lib/GNS_legacy';
 import { ADDRESS_ZERO } from '@uniswap/v3-sdk';
 
 
-// Markets list
-const marketsList = [
-  {
-    name: 'GMX',
-  },
-  {
-    name: 'GNS',
-  },
-];
-
 const { AddressZero } = ethers.constants;
 
 const PENDING_POSITION_VALID_DURATION = 600 * 1000;
@@ -1039,7 +1029,6 @@ export const Exchange = forwardRef((props, ref) => {
             minExecutionFee={minExecutionFee}
             minExecutionFeeUSD={minExecutionFeeUSD}
             minExecutionFeeErrorMessage={minExecutionFeeErrorMessage}
-            marketsList={marketsList}
           />
         </div>
         <div className="Exchange-lists large">{getListSection()}</div>
