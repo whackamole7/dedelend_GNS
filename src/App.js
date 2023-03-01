@@ -101,7 +101,7 @@ function App() {
 				</UserStatsContext.Provider>
 			</GlobalStatsContext.Provider>
 			<Warning>
-				DeDeLend is in beta. Use at your own risk
+				DeDeLend is in alpha. Use at your own risk
 			</Warning>
 		</>
 	);

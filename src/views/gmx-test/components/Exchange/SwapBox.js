@@ -193,6 +193,8 @@ export default function SwapBox(props) {
     minExecutionFee,
     minExecutionFeeUSD,
     minExecutionFeeErrorMessage,
+    pendingPositionsGNS,
+    setPendingPositionsGNS,
   } = props;
 
   
@@ -1180,17 +1182,29 @@ export default function SwapBox(props) {
         }
       }
 
-      if (toTokenInfo && toTokenInfo.maxPrice) {
+      if (suitableMarket?.name === 'GMX') {
+        if (toTokenInfo && toTokenInfo.maxPrice) {
+          const sizeUsd = toAmount.mul(toTokenInfo.maxPrice).div(expandDecimals(1, toTokenInfo.decimals));
+          if (
+            toTokenInfo.maxGlobalLongSize &&
+            toTokenInfo.maxGlobalLongSize.gt(0) &&
+            toTokenInfo.maxAvailableLong &&
+            sizeUsd.gt(toTokenInfo.maxAvailableLong)
+          ) {
+            return [t`Max ${toTokenInfo.symbol} long exceeded`];
+          }
+        }
+      } else if (suitableMarket?.name === 'GNS') {
         const sizeUsd = toAmount.mul(toTokenInfo.maxPrice).div(expandDecimals(1, toTokenInfo.decimals));
         if (
-          toTokenInfo.maxGlobalLongSize &&
-          toTokenInfo.maxGlobalLongSize.gt(0) &&
-          toTokenInfo.maxAvailableLong &&
-          sizeUsd.gt(toTokenInfo.maxAvailableLong)
+          liquidity &&
+          ((sizeUsd / 10**USD_DECIMALS) > (liquidity[suitableMarket?.name].value))
         ) {
           return [t`Max ${toTokenInfo.symbol} long exceeded`];
         }
       }
+
+      
     }
 
     if (isShort) {
@@ -1230,6 +1244,8 @@ export default function SwapBox(props) {
         ) {
           const usdgFromAmount = adjustForDecimals(fromUsdMin, USD_DECIMALS, USDG_DECIMALS);
           const nextUsdgAmount = fromTokenInfo.usdgAmount.add(usdgFromAmount);
+
+          
           if (nextUsdgAmount.gt(fromTokenInfo.maxUsdgAmount)) {
             return [t`${fromTokenInfo.symbol} pool exceeded, try different token`, true, "MAX_USDG"];
           }
@@ -1728,6 +1744,7 @@ export default function SwapBox(props) {
 
     const boundedFromAmount = fromAmount ? fromAmount : bigNumberify(0);
 
+
     if (fromAmount && fromAmount.gt(0) && fromTokenAddress === USDG_ADDRESS && isLong) {
       const { amount: nextToAmount, path: multiPath } = getNextToAmount(
         chainId,
@@ -1834,56 +1851,6 @@ export default function SwapBox(props) {
         setIsPendingConfirmation(false);
       });
   };
-
-  const [TPValue, setTPValue] = useState('');
-  const openTrade = async () => {
-    setIsSubmitting(true);
-    
-    const pairIndex = toToken.symbol === 'UNI' ?
-      17 : GNS_PAIRS.findIndex(pair => toToken.symbol === pair);
-    const posSize = ethers.utils.parseEther(fromValue);
-    const openPrice = (toTokenInfo.maxPrice.div('1' + '0'.repeat(20))).toString();
-    const roundLeverage = leverage / 10**4;
-    const typeOfOrder = isMarketOrder ? 0 : 1;
-    const slippage = userSlippage * 10**10;
-    const takeProfit = String(formatForContract(TPValue, 10));
-
-    const contract = new ethers.Contract(GNS_Trading.address, GNS_Trading.abi, library.getSigner());
-
-    contract.openTrade(
-      [account, pairIndex, 0, 0, posSize, openPrice, isLong, roundLeverage, takeProfit, 0],
-      typeOfOrder,
-      0,
-      slippage,
-      account
-    ).then(tsc => {
-      setIsConfirming(false);
-      console.log(tsc);
-      tsc.wait()
-        .then(() => {
-          notifySuccess('Position opened!', tsc.hash);
-        })
-    }, errAlert)
-    .finally(() => {
-      setIsSubmitting(false);
-      setIsPendingConfirmation(false);
-    });
-  };
-
-  const setStopLoss = async (val) => {
-
-  }
-  const setTakeProfit = async (val) => {
-    const newTP = (val * 10**10).toString();
-    
-    const contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, library.getSigner());
-    // contract.updateTp(
-    //   account,
-    //   pairIndex,
-    //   index,
-    //   newTP
-    // )
-  }
 
   const onSwapOptionChange = (opt) => {
     setSwapOption(opt);
@@ -2045,13 +2012,12 @@ export default function SwapBox(props) {
       }
       feeBps = feeBasisPoints;
     }
-  } else if (toUsdMax) {
-
+  } else if (toUsdMax && fromAmount) {
     positionFee = toUsdMax.mul(MARGIN_FEE_BASIS_POINTS).div(BASIS_POINTS_DIVISOR);
     if (suitableMarket?.name === 'GMX') {
       feesUsd = positionFee;
     } else if (suitableMarket?.name === 'GNS') {
-      feesUsd = BigNumber.from(formatAmount(toUsdMax, 5, 0, 0)).mul(12);
+      feesUsd = expandDecimals(BigNumber.from(formatAmount(fromAmount.mul(leverage / 10**4), 4, 0, 0)).mul(8), 12);
     }
     
 
@@ -2074,10 +2040,74 @@ export default function SwapBox(props) {
     feeBps = feeBasisPoints;
   }
 
+  const [TPValue, setTPValue] = useState('');
+  const [SLValue, setSLValue] = useState('');
+  const openTrade = async () => {
+    setIsSubmitting(true);
+    
+    const pairIndex = toToken.symbol === 'UNI' ?
+      17 : GNS_PAIRS.findIndex(pair => toToken.symbol === pair);
+    const posSize = ethers.utils.parseEther(fromValue);
+    const openPrice = (toTokenInfo.maxPrice.div('1' + '0'.repeat(20))).toString();
+    const roundLeverage = leverage / 10**4;
+    const typeOfOrder = isMarketOrder ? 0 : 1;
+    const slippage = userSlippage * 10**10;
+    const takeProfit = String(formatForContract(TPValue, 10));
+    const stopLoss = String(formatForContract(SLValue, 10));
+    const fees = BigNumber.from(formatAmount(feesUsd, 12, 0, 0));
+    
+    const key = `${pairIndex}${roundLeverage}`;
+    
+    const contract = new ethers.Contract(GNS_Trading.address, GNS_Trading.abi, library.getSigner());
+    contract.openTrade(
+      [account, pairIndex, 0, 0, posSize, openPrice, isLong, roundLeverage, takeProfit, stopLoss],
+      typeOfOrder,
+      0,
+      slippage,
+      account
+    ).then(tsc => {
+      pendingPositionsGNS[key] = {
+        pairIndex,
+        isLong,
+        leverage,
+        positionSizeDai: expandDecimals(posSize.sub(fees), 12),
+        size: expandDecimals(posSize.sub(fees).mul(roundLeverage), 12),
+      };
+      setPendingPositionsGNS(pendingPositionsGNS);
+      
+      setIsConfirming(false);
+      console.log(tsc);
+      
+      tsc.wait()
+        .then(() => {
+          notifySuccess('Position opened!', tsc.hash);
+        })
+    }, errAlert)
+    .finally(() => {
+      setIsSubmitting(false);
+      setIsPendingConfirmation(false);
+    });
+  };
+
+  const setStopLoss = async (val) => {
+
+  }
+  const setTakeProfit = async (val) => {
+    const newTP = (val * 10**10).toString();
+    
+    const contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, library.getSigner());
+    // contract.updateTp(
+    //   account,
+    //   pairIndex,
+    //   index,
+    //   newTP
+    // )
+  }
+
   const leverageStorage = {
     GMX: {
       marks: {
-        1.1: "1.1x",
+        2: "2x",
         5: "5x",
         10: "10x",
         15: "15x",
@@ -2251,9 +2281,14 @@ export default function SwapBox(props) {
             <div className="Exchange-swap-section">
               <div className="Exchange-swap-section-top">
                 <div className="muted">
-                  {toUsdMax && (
+                  {toUsdMax && suitableMarket?.name === 'GMX' && (
                     <div className="Exchange-swap-usd">
                       {getToLabel()}: {formatAmount(toUsdMax, USD_DECIMALS, 2, true)} USD
+                    </div>
+                  )}
+                  {toUsdMax && fromAmount && suitableMarket?.name === 'GNS' && (
+                    <div className="Exchange-swap-usd">
+                      {getToLabel()}: {formatAmount(fromAmount.mul(leverage / 10**4), USDG_DECIMALS, 2, true)} USD
                     </div>
                   )}
                   {!toUsdMax && getToLabel()}
@@ -2555,7 +2590,7 @@ export default function SwapBox(props) {
                 {!feesUsd && "-"}
                 {feesUsd && (
                   <Tooltip
-                    handle={`$${formatAmount(feesUsd, USD_DECIMALS, 2, true)}`}
+                    handle={`${suitableMarket?.name === 'GMX' ? '$' : ''}${formatAmount(feesUsd, USD_DECIMALS, 2, true)}${suitableMarket?.name === 'GNS' ? ' DAI' : ''}`}
                     position="right-bottom"
                     renderContent={() => {
                       return (
@@ -2764,6 +2799,8 @@ export default function SwapBox(props) {
           market={suitableMarket?.name}
           TPValue={TPValue}
           setTPValue={setTPValue}
+          SLValue={SLValue}
+          setSLValue={setSLValue}
         />
       )}
       {renderModal()}

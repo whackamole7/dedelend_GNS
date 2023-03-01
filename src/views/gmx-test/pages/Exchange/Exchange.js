@@ -505,27 +505,47 @@ export const Exchange = forwardRef((props, ref) => {
       ]),
     }
   );
+
+  
+  const [pendingPositionsGNS, setPendingPositionsGNS] = useState([]);
+  const [positionsGNSLoading, setPositionsGNSLoading] = useState(true);
   const { data: positionsGNS, error: positionsGNSError } = useSWR(
-    active && [active, chainId, GNS_Storage.address, "getPositionsGNS", account],
+    active && [active, chainId, GNS_Storage.address, pendingPositionsGNS, "getPositionsGNS", account],
     async () => {
       const positions = [];
       let position;
 
       const contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, library.getSigner());
+      const keys = [];
       
-      for (let i = 0; i < GNS_PAIRS.length; i++) {
-        const pairIndex = i;
+      for (let i = 0; i < GNS_PAIRS.length + 1; i++) {
+        let pairIndex = i;
+        if (pairIndex === 3) {
+          pairIndex = 17;
+        }
         
-        for (let j = 0; j < 3; j++) {
+        for (let j = 0; j < 4; j++) {
           const index = j;
           position = await contract.openTrades(account, pairIndex, index);
           if (position.trader === ADDRESS_ZERO) {
             continue;
           }
+
           positions.push(position);
+          
+          const key = `${pairIndex}${position.leverage}`;
+          keys.push(key);
         }
       }
 
+      setPositionsGNSLoading(false);
+
+      keys.forEach(key => {
+        if (pendingPositionsGNS[key]) {
+          delete pendingPositionsGNS[key];
+          setPendingPositionsGNS(pendingPositionsGNS);
+        }
+      })
       return positions;
     }
   );
@@ -897,7 +917,10 @@ export const Exchange = forwardRef((props, ref) => {
             isWaitingForPositionRouterApproval={isWaitingForPositionRouterApproval}
             orderBookApproved={orderBookApproved}
             positionRouterApproved={positionRouterApproved}
+            positionsLoading={positionsGNSLoading}
             positionsGNS={positionsGNS}
+            pendingPositionsGNS={pendingPositionsGNS}
+            setPendingPositionsGNS={setPendingPositionsGNS}
             positions={positions}
             positionsMap={positionsMap}
             infoTokens={infoTokens}
@@ -1029,6 +1052,9 @@ export const Exchange = forwardRef((props, ref) => {
             minExecutionFee={minExecutionFee}
             minExecutionFeeUSD={minExecutionFeeUSD}
             minExecutionFeeErrorMessage={minExecutionFeeErrorMessage}
+            positionsGNS={positionsGNS}
+            pendingPositionsGNS={pendingPositionsGNS}
+            setPendingPositionsGNS={setPendingPositionsGNS}
           />
         </div>
         <div className="Exchange-lists large">{getListSection()}</div>

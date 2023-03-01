@@ -27,9 +27,6 @@ const NumberInput_v2 = (props) => {
 					if (setBtnActive) {
 						setBtnActive(true)
 					}
-					if (fractionForbidden) {
-						setValue()
-					}
 
 					if (fractionForbidden) {
 						setValue(nonFractionConvert(e.target.value));

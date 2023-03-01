@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Tooltip from './../Tooltip/Tooltip';
 import { formatAmount } from '../../lib/legacy';
 import { ImSpinner2 } from 'react-icons/im';
@@ -27,10 +27,17 @@ const PositionsItem = (props) => {
 		setStopLoss,
 		setTakeProfit,
 		isLarge,
+		isPending,
 	} = props;
 
+	const [isCloseLoading, setIsCloseLoading] = useState(false);
+
 	const marketImg = require(`../../../../img/icon-${position.market}.svg`).default;
-	
+
+	if (position.market === 'GNS') {
+		position.hasPendingChanges = isPending;
+	}
+
 	return (
 		<>
 			{isLarge ?
@@ -144,13 +151,13 @@ const PositionsItem = (props) => {
 						// onPositionClick(position)
 						return;
 					}}>
-						${formatAmount(position.averagePrice, USD_DECIMALS, 2, true)}
+						{`$${formatAmount(position.averagePrice, USD_DECIMALS, 2, true)}`}
 					</td>
 					<td className="" onClick={() => {
 						// onPositionClick(position)
 						return;
 					}}>
-						${formatAmount(liquidationPrice, USD_DECIMALS, 2, true)}
+						{`$${formatAmount(liquidationPrice, USD_DECIMALS, 2, true)}`}
 					</td>
 					<td>
 						<div style={{ width: 100, display: 'block' }}>
@@ -176,7 +183,15 @@ const PositionsItem = (props) => {
 						>
 							Set SL
 						</button> */}
-						—
+							{position.market === 'GNS' && position.sl &&
+								(
+									position.sl.eq(0) ?
+									'—' : ('$' + formatAmount(position.sl, 10, 2, true))
+								)
+							}
+							{position.market === 'GMX' &&
+								'—'
+							}
 					</td>
 					<td>
 						{/* <button
@@ -186,7 +201,7 @@ const PositionsItem = (props) => {
 						>
 							Set TP
 						</button> */}
-						{position.market === 'GNS' &&
+						{position.market === 'GNS' && position.tp &&
 							(
 								position.tp.eq(0) ?
 								'—' : ('$' + formatAmount(position.tp, 10, 2, true))
@@ -197,13 +212,23 @@ const PositionsItem = (props) => {
 						}
 					</td>
 					<td className="td-btn pos-relative">
-						<button
-							className="Exchange-list-action"
-							onClick={() => sellPosition(position)}
-							disabled={position.size.eq(0)}
-						>
-							Close
-						</button>
+						{
+							isCloseLoading ?
+								<ImSpinner2 className="spin position-loading-icon" />
+								:
+								!isPending &&
+									<button
+										className="Exchange-list-action"
+										onClick={() => {
+											sellPosition(position, setIsCloseLoading);
+											setIsCloseLoading(true);
+										}}
+										disabled={position.size.eq(0)}
+									>
+										Close
+									</button>
+						}
+						
 						{/* <PositionDropdown
 							handleEditCollateral={() => {
 								editPosition(position);
@@ -227,7 +252,10 @@ const PositionsItem = (props) => {
 							<Trans>Position</Trans>
 						</div>
 						<div>
-							<div className="Exchange-list-token">{position.indexToken.symbol}</div>
+							<div className="Exchange-list-token">
+								{position.hasPendingChanges && <ImSpinner2 className="spin position-loading-icon" style={{marginRight: 10}} />}
+								{position.indexToken.symbol}
+								</div>
 							<img className='market-logo' src={marketImg} alt={`${position.market} icon`} />
 							<span
 								className={cx("Exchange-list-side", {
@@ -297,7 +325,15 @@ const PositionsItem = (props) => {
 							Set SL
 						</button> */}
 						<div>
-							—
+							{position.market === 'GNS' && position.sl &&
+								(
+									position.sl.eq(0) ?
+									'—' : ('$' + formatAmount(position.sl, 10, 2, true))
+								)
+							}
+							{position.market === 'GMX' &&
+								'—'
+							}
 						</div>
 					</div>
 					<div className="App-card-row">
@@ -312,7 +348,7 @@ const PositionsItem = (props) => {
 							Set TP
 						</button> */}
 						<div>
-							{position.market === 'GNS' &&
+							{position.market === 'GNS' && position.tp &&
 								(
 									position.tp.eq(0) ?
 									'—' : ('$' + formatAmount(position.tp, 10, 2, true))
@@ -327,13 +363,17 @@ const PositionsItem = (props) => {
 				<div className="App-card-divider"></div>
 				<div className="App-card-options">
 					<div className="App-button-option pos-relative">
-						<button
-							className="App-button-option App-card-option"
-							disabled={position.size.eq(0)}
-							onClick={() => sellPosition(position)}
-						>
-							Close
-						</button>
+						{!isPending &&
+							<button
+								className="App-button-option App-card-option"
+								disabled={position.size.eq(0)}
+								onClick={() => {
+									sellPosition(position, setIsCloseLoading)
+									setIsCloseLoading(true);
+								}}
+							>
+								Close
+							</button>}
 					</div>
 				</div>
 			</div>}

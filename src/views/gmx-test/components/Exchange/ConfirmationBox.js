@@ -113,6 +113,8 @@ export default function ConfirmationBox(props) {
     market,
     TPValue,
     setTPValue,
+    SLValue,
+    setSLValue,
   } = props;
 
   const nativeTokenSymbol = getConstant(chainId, "nativeTokenSymbol");
@@ -623,7 +625,7 @@ export default function ConfirmationBox(props) {
           )}
           {orderOption === LIMIT && renderAvailableLiquidity()}
 
-          <div className="row-divider" />
+          {market === 'GNS' && <div className="row-divider" />}
           
           {market === 'GMX' && isShort && (
             <ExchangeInfoRow label="Collateral In" isTop={true}>{getToken(chainId, shortCollateralAddress).symbol}</ExchangeInfoRow>
@@ -691,14 +693,22 @@ export default function ConfirmationBox(props) {
           }
           {
             market === 'GNS' &&
-            <NumberInput_v2 
-              value={TPValue}
-              setValue={setTPValue}
-              placeholder={"Set Take Profit"}
-              fractionForbidden={true}
-            />
+            <>
+              <NumberInput_v2 
+                value={TPValue}
+                setValue={setTPValue}
+                placeholder={"Set Take Profit"}
+                fractionForbidden={true}
+              />
+              <NumberInput_v2 
+                value={SLValue}
+                setValue={setSLValue}
+                placeholder={"Set Stop Loss"}
+                fractionForbidden={true}
+              />
+            </>
           }
-          <div className="row-divider" />
+          {market === 'GNS' && <div className="row-divider" />}
           {isMarketOrder && (
             <ExchangeInfoRow label="Entry Price">
               {hasExistingPosition && toAmount && toAmount.gt(0) && (
