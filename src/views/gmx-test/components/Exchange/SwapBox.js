@@ -952,14 +952,16 @@ export default function SwapBox(props) {
     });
   } else if (suitableMarket?.name === 'GNS') {
     if (fromAmount && toTokenInfo.maxPrice && leverage) {
-      const markPrice = toTokenInfo.maxPrice;
-      const collateral = fromAmount.mul(leverage);
-      
-      const liqPriceDistance = (markPrice.mul(collateral.mul(9).div(10)).div(collateral).div(formatAmount(leverage, 4, 0, 0)));
+      if (!fromAmount.eq(0) && !leverage.eq(0)) {
+        const markPrice = toTokenInfo.maxPrice;
+        const collateral = fromAmount.mul(leverage);
+        
+        const liqPriceDistance = (markPrice.mul(collateral.mul(9).div(10)).div(collateral).div(formatAmount(leverage, 4, 0, 0)));
 
-      liquidationPrice = (isLong ?
-          markPrice.sub(liqPriceDistance)
-          : markPrice.add(liqPriceDistance));
+        liquidationPrice = (isLong ?
+            markPrice.sub(liqPriceDistance)
+            : markPrice.add(liqPriceDistance));
+      }
     }
   }
 
@@ -2061,8 +2063,8 @@ export default function SwapBox(props) {
     const stopLossPercentage = formatForContract(SLValue, 0);
     const openPriceNum = Number(formatAmount(toTokenInfo.maxPrice, 30, 2, 0));
 
-    const takeProfit = getSlTpFromPercentage(isLong, true, takeProfitPercentage, openPriceNum, roundLeverage);
-    const stopLoss = getSlTpFromPercentage(isLong, false, stopLossPercentage, openPriceNum, roundLeverage);
+    const takeProfit = getSlTpFromPercentage(isLong, true, takeProfitPercentage, openPriceNum, roundLeverage, feesUsd);
+    const stopLoss = getSlTpFromPercentage(isLong, false, stopLossPercentage, openPriceNum, roundLeverage, feesUsd);
 
       
     const fees = BigNumber.from(formatAmount(feesUsd, 12, 0, 0));
