@@ -11,3 +11,5 @@ export const marketsList = [
     name: 'GNS',
   },
 ];
+
+export const GNS_FEES_MULTIPLIER = 0.0008;

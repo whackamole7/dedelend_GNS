@@ -169,7 +169,7 @@ const PositionsItem = (props) => {
 										muted: positionDelta.eq(0),
 									})}
 								>
-									{position.deltaStr} ({position.deltaPercentageStr})
+									{position.deltaAfterFeesStr ?? position.deltaStr} ({position.deltaAfterFeesPercentageStr ?? position.deltaPercentageStr})
 								</div>
 							)}
 						</div>
@@ -308,7 +308,7 @@ const PositionsItem = (props) => {
 										muted: positionDelta.eq(0),
 									})}
 								>
-									{position.deltaStr} ({position.deltaPercentageStr})
+									{position.deltaAfterFeesStr ?? position.deltaStr} ({position.deltaAfterFeesPercentageStr ?? position.deltaPercentageStr})
 								</div>
 							)}
 						</div>

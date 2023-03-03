@@ -37,6 +37,8 @@ import { getNativeToken, getToken, getWrappedToken } from "../../config/Tokens";
 import StatsTooltipRow from "../StatsTooltip/StatsTooltipRow";
 import SlippageInput from './../SlippageInput/SlippageInput';
 import NumberInput_v2 from './../../../../components/UI/input/NumberInput_v2';
+import { formatForContract } from "../../../../components/utils/math";
+import { getSlTpFromPercentage } from './../../../../components/utils/utils';
 
 const HIGH_SPREAD_THRESHOLD = expandDecimals(1, USD_DECIMALS).div(100); // 1%;
 
@@ -117,6 +119,15 @@ export default function ConfirmationBox(props) {
     setSLValue,
   } = props;
 
+
+  const takeProfitPercentage = formatForContract(TPValue, 0);
+  const stopLossPercentage = formatForContract(SLValue, 0);
+  const openPriceNum = Number(formatAmount(toTokenInfo.maxPrice, 30, 2, 0));
+  const roundLeverage = leverage / 10**4;
+
+  const takeProfitPrice = getSlTpFromPercentage(true, takeProfitPercentage, openPriceNum, roundLeverage);
+  const stopLossPrice = getSlTpFromPercentage(false, stopLossPercentage, openPriceNum, roundLeverage);
+  
   const nativeTokenSymbol = getConstant(chainId, "nativeTokenSymbol");
   
   const [isProfitWarningAccepted, setIsProfitWarningAccepted] = useState(false);
@@ -683,27 +694,35 @@ export default function ConfirmationBox(props) {
               }}
             />
           </ExchangeInfoRow>
-          {
+          {/* {
             market === 'GMX' &&
             showSpread && (
               <ExchangeInfoRow label="Spread" isWarning={spread.isHigh} isTop={true}>
                 {formatAmount(spread.value.mul(100), USD_DECIMALS, 2, true)}%
               </ExchangeInfoRow>
             )
-          }
+          } */}
           {
             market === 'GNS' &&
             <>
+              <ExchangeInfoRow label="Take Profit">
+                {takeProfitPercentage &&
+                  `$${formatAmount(takeProfitPrice, 10, 2)}`}
+              </ExchangeInfoRow>
               <NumberInput_v2 
                 value={TPValue}
                 setValue={setTPValue}
-                placeholder={"Set Take Profit"}
+                placeholder={"Set Take Profit (%)"}
                 fractionForbidden={true}
               />
+              <ExchangeInfoRow label="Stop Loss">
+                {stopLossPercentage &&
+                  `$${formatAmount(stopLossPrice, 10, 2)}`}
+              </ExchangeInfoRow>
               <NumberInput_v2 
                 value={SLValue}
                 setValue={setSLValue}
-                placeholder={"Set Stop Loss"}
+                placeholder={"Set Stop Loss (%)"}
                 fractionForbidden={true}
               />
             </>

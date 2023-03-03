@@ -104,6 +104,8 @@ import SLTPModal from './../../../../components/UI/modal/SLTPModal';
 import { signer } from './../../../../components/utils/providers';
 import { USDC } from '../../../../components/utils/contracts';
 import { marketsList } from "../../../../components/utils/constants";
+import NumberInput_v2 from "../../../../components/UI/input/NumberInput_v2";
+import { getSlTpFromPercentage } from './../../../../components/utils/utils';
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -2042,22 +2044,32 @@ export default function SwapBox(props) {
 
   const [TPValue, setTPValue] = useState('');
   const [SLValue, setSLValue] = useState('');
+  
+  
   const openTrade = async () => {
     setIsSubmitting(true);
     
     const pairIndex = toToken.symbol === 'UNI' ?
       17 : GNS_PAIRS.findIndex(pair => toToken.symbol === pair);
     const posSize = ethers.utils.parseEther(fromValue);
-    const openPrice = (toTokenInfo.maxPrice.div('1' + '0'.repeat(20))).toString();
+    const openPrice = formatAmount(toTokenInfo.maxPrice, 20, 0, 0);
     const roundLeverage = leverage / 10**4;
     const typeOfOrder = isMarketOrder ? 0 : 1;
     const slippage = userSlippage * 10**10;
-    const takeProfit = String(formatForContract(TPValue, 10));
-    const stopLoss = String(formatForContract(SLValue, 10));
+
+    const takeProfitPercentage = formatForContract(TPValue, 0);
+    const stopLossPercentage = formatForContract(SLValue, 0);
+    const openPriceNum = Number(formatAmount(toTokenInfo.maxPrice, 30, 2, 0));
+
+    const takeProfit = getSlTpFromPercentage(true, takeProfitPercentage, openPriceNum, roundLeverage);
+    const stopLoss = getSlTpFromPercentage(false, stopLossPercentage, openPriceNum, roundLeverage);
+
+      
     const fees = BigNumber.from(formatAmount(feesUsd, 12, 0, 0));
     
     const key = `${pairIndex}${roundLeverage}`;
-    
+      
+    console.log(`Take Proft: ${takeProfit}\nStop Loss: ${stopLoss}`);
     const contract = new ethers.Contract(GNS_Trading.address, GNS_Trading.abi, library.getSigner());
     contract.openTrade(
       [account, pairIndex, 0, 0, posSize, openPrice, isLong, roundLeverage, takeProfit, stopLoss],
@@ -2070,8 +2082,7 @@ export default function SwapBox(props) {
         pairIndex,
         isLong,
         leverage,
-        positionSizeDai: expandDecimals(posSize.sub(fees), 12),
-        size: expandDecimals(posSize.sub(fees).mul(roundLeverage), 12),
+        positionSizeDai: posSize.sub(fees),
       };
       setPendingPositionsGNS(pendingPositionsGNS);
       
@@ -2093,15 +2104,7 @@ export default function SwapBox(props) {
 
   }
   const setTakeProfit = async (val) => {
-    const newTP = (val * 10**10).toString();
-    
-    const contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, library.getSigner());
-    // contract.updateTp(
-    //   account,
-    //   pairIndex,
-    //   index,
-    //   newTP
-    // )
+
   }
 
   const leverageStorage = {
@@ -2119,7 +2122,7 @@ export default function SwapBox(props) {
         45: "45x",
         50: "50x",
       },
-      min: 1.1,
+      min: 2,
       max: 50,
     },
     GNS: {

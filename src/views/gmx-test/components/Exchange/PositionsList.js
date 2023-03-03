@@ -35,6 +35,8 @@ import { errAlert, notifySuccess } from './../../../../components/utils/notifica
 import { ethers } from 'ethers';
 import { BigNumber } from 'ethers';
 import { getTokenBySymbol } from "../../config/Tokens";
+import { expandDecimals } from './../../lib/legacy';
+import { GNS_FEES_MULTIPLIER } from './../../../../components/utils/constants';
 
 const getOrdersForPosition = (account, position, orders, nativeTokenAddress) => {
   if (!orders || orders.length === 0) {
@@ -312,17 +314,20 @@ export default function PositionsList(props) {
               const key = `${position.pairIndex}${position.index}`;
               const isLong = position.buy;
               position.isLong = isLong;
-
+  
               const tokenSymb = position.pairIndex.eq(17) ? 'UNI' : GNS_PAIRS[position.pairIndex];
               position.indexToken = getTokenBySymbol(chainId, tokenSymb);
               const tokenAddr = position.indexToken.address;
               const curPrice = infoTokens[tokenAddr].maxPrice;
-
-
+  
               position.size = BigNumber.from(position.positionSizeDai + '0'.repeat(12)).mul(position.leverage);
               position.markPrice = curPrice;
               position.averagePrice = BigNumber.from(position.openPrice + '0'.repeat(20));
               position.collateral = BigNumber.from(position.positionSizeDai + '0'.repeat(12));
+              
+              position.initCollateral = expandDecimals(position.positionSizeDai.div(10000 - position.leverage.mul(GNS_FEES_MULTIPLIER * 10**4)), 16);
+              position.fees = position.initCollateral.sub(position.collateral);
+              
               
               let hasPositionProfit;
               if (isLong) {
@@ -331,7 +336,6 @@ export default function PositionsList(props) {
                 hasPositionProfit = position.markPrice.lte(position.averagePrice);
               }
               position.hasProfit = hasPositionProfit;
-  
               
               const priceDelta = position.averagePrice.gt(position.markPrice)
               ? position.averagePrice.sub(position.markPrice)
@@ -339,6 +343,26 @@ export default function PositionsList(props) {
               position.delta = position.size.mul(priceDelta).div(position.averagePrice);
               
               position.deltaPercentage = position.delta.mul(BASIS_POINTS_DIVISOR).div(position.collateral);
+  
+              let pendingDeltaAfterFees;
+              if (position.hasProfit) {
+                if (position.delta.gt(position.fees)) {
+                  hasPositionProfit = true;
+                  pendingDeltaAfterFees = position.delta.sub(position.fees);
+                } else {
+                  hasPositionProfit = false;
+                  pendingDeltaAfterFees = position.fees.sub(position.delta);
+                }
+              } else {
+                hasPositionProfit = false;
+                pendingDeltaAfterFees = position.delta.add(position.fees);
+              }
+        
+              position.hasProfit = hasPositionProfit;
+              position.delta = pendingDeltaAfterFees;
+              position.deltaPercentage = pendingDeltaAfterFees
+                .mul(BASIS_POINTS_DIVISOR)
+                .div(position.collateral);
               
               const { deltaStr, deltaPercentageStr } = getDeltaStr({
                 delta: position.delta,
@@ -378,7 +402,7 @@ export default function PositionsList(props) {
                   sellPosition={sellPosition}
                   setStopLoss={setStopLoss}
                   setTakeProfit={setTakeProfit}
-                  isLarge={false}
+                  isLarge={true}
                 />
               );
             })}
@@ -540,6 +564,10 @@ export default function PositionsList(props) {
             position.averagePrice = BigNumber.from(position.openPrice + '0'.repeat(20));
             position.collateral = BigNumber.from(position.positionSizeDai + '0'.repeat(12));
             
+            position.initCollateral = expandDecimals(position.positionSizeDai.div(10000 - position.leverage.mul(GNS_FEES_MULTIPLIER * 10**4)), 16);
+            position.fees = position.initCollateral.sub(position.collateral);
+            
+            
             let hasPositionProfit;
             if (isLong) {
               hasPositionProfit = position.markPrice.gte(position.averagePrice);
@@ -547,7 +575,6 @@ export default function PositionsList(props) {
               hasPositionProfit = position.markPrice.lte(position.averagePrice);
             }
             position.hasProfit = hasPositionProfit;
-
             
             const priceDelta = position.averagePrice.gt(position.markPrice)
             ? position.averagePrice.sub(position.markPrice)
@@ -555,6 +582,26 @@ export default function PositionsList(props) {
             position.delta = position.size.mul(priceDelta).div(position.averagePrice);
             
             position.deltaPercentage = position.delta.mul(BASIS_POINTS_DIVISOR).div(position.collateral);
+
+            let pendingDeltaAfterFees;
+            if (position.hasProfit) {
+              if (position.delta.gt(position.fees)) {
+                hasPositionProfit = true;
+                pendingDeltaAfterFees = position.delta.sub(position.fees);
+              } else {
+                hasPositionProfit = false;
+                pendingDeltaAfterFees = position.fees.sub(position.delta);
+              }
+            } else {
+              hasPositionProfit = false;
+              pendingDeltaAfterFees = position.delta.add(position.fees);
+            }
+      
+            position.hasProfit = hasPositionProfit;
+            position.delta = pendingDeltaAfterFees;
+            position.deltaPercentage = pendingDeltaAfterFees
+              .mul(BASIS_POINTS_DIVISOR)
+              .div(position.collateral);
             
             const { deltaStr, deltaPercentageStr } = getDeltaStr({
               delta: position.delta,

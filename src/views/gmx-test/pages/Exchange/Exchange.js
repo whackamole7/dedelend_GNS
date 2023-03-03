@@ -3,6 +3,7 @@ import { Trans, t } from "@lingui/macro";
 import { useWeb3React } from "@web3-react/core";
 import useSWR from "swr";
 import { ethers } from "ethers";
+import useWebSocket from 'react-use-websocket';
 
 import {
   FUNDING_RATE_PRECISION,
@@ -188,6 +189,7 @@ export function getPositions(
       hasProfit: positionData[i * propsLength + 7].eq(1),
       delta: positionData[i * propsLength + 8],
       markPrice: isLong[i] ? indexToken.minPrice : indexToken.maxPrice,
+      market: 'GMX',
     };
 
 
@@ -602,8 +604,6 @@ export const Exchange = forwardRef((props, ref) => {
     document.title = title;
   }, [tokenSelection, swapOption, infoTokens, chainId, fromTokenAddress, toTokenAddress]);
 
-  const maxPrice = getTokenInfo(infoTokens, toTokenAddress).maxPrice;
-
   const { positions, positionsMap } = getPositions(
     chainId,
     positionQuery,
@@ -935,7 +935,7 @@ export const Exchange = forwardRef((props, ref) => {
             nativeTokenAddress={nativeTokenAddress}
             setMarket={setMarket}
             orders={orders}
-            showPnlAfterFees={savedShowPnlAfterFees}
+            showPnlAfterFees={true}
             minExecutionFee={minExecutionFee}
             minExecutionFeeUSD={minExecutionFeeUSD}
             minExecutionFeeErrorMessage={minExecutionFeeErrorMessage}

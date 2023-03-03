@@ -1,6 +1,5 @@
 import React from 'react';
 import './Slippage.scss';
-import { convertInputNum, separateThousands, sepToNumber } from './../../../../components/utils/sepThousands';
 
 const SlippageInput = ({ value, setValue }) => {
 	return (
@@ -17,11 +16,13 @@ const SlippageInput = ({ value, setValue }) => {
 							// const val = sepToNumber(valStr);
 							
 							if (val > 100) {
-								setValue(100)
+								setValue(100);
 							} else if (val < 0) {
-								setValue(0)
+								setValue(0);
+							} else if (val === 0) {
+								setValue(0.3);
 							} else {
-								setValue(val)
+								setValue(val);
 							}
 						}}
 						onFocus={(e) => {
