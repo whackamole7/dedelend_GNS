@@ -936,7 +936,6 @@ export default function SwapBox(props) {
   }
   
   let liquidationPrice;
-  // const feesGNS = fromAmount && BigNumber.from(formatAmount(fromAmount.mul(leverage), 3, 0, 0)).mul(12);
   if (suitableMarket?.name === 'GMX') {
     liquidationPrice = getLiquidationPrice({
       isLong,
@@ -2046,6 +2045,8 @@ export default function SwapBox(props) {
 
   const [TPValue, setTPValue] = useState('');
   const [SLValue, setSLValue] = useState('');
+  const [TPHasError, setTPHasError] = useState(false);
+  const [SLHasError, setSLHasError] = useState(false);
   
   
   const openTrade = async () => {
@@ -2059,13 +2060,8 @@ export default function SwapBox(props) {
     const typeOfOrder = isMarketOrder ? 0 : 1;
     const slippage = userSlippage * 10**10;
 
-    const takeProfitPercentage = formatForContract(TPValue, 0);
-    const stopLossPercentage = formatForContract(SLValue, 0);
-    const openPriceNum = Number(formatAmount(toTokenInfo.maxPrice, 30, 2, 0));
-
-    const takeProfit = getSlTpFromPercentage(isLong, true, takeProfitPercentage, openPriceNum, roundLeverage, feesUsd);
-    const stopLoss = getSlTpFromPercentage(isLong, false, stopLossPercentage, openPriceNum, roundLeverage, feesUsd);
-
+    const takeProfit = (formatForContract(TPValue, 10)).toFixed(0);
+    const stopLoss = (formatForContract(SLValue, 10)).toFixed(0);
       
     const fees = BigNumber.from(formatAmount(feesUsd, 12, 0, 0));
     
@@ -2806,6 +2802,10 @@ export default function SwapBox(props) {
           setTPValue={setTPValue}
           SLValue={SLValue}
           setSLValue={setSLValue}
+          SLHasError={SLHasError}
+          setSLHasError={setSLHasError}
+          TPHasError={TPHasError}
+          setTPHasError={setTPHasError}
         />
       )}
       {renderModal()}

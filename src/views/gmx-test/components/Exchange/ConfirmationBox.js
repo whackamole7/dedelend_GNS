@@ -117,16 +117,12 @@ export default function ConfirmationBox(props) {
     setTPValue,
     SLValue,
     setSLValue,
+    TPHasError,
+    setTPHasError,
+    SLHasError,
+    setSLHasError,
   } = props;
 
-
-  const takeProfitPercentage = formatForContract(TPValue, 0);
-  const stopLossPercentage = formatForContract(SLValue, 0);
-  const openPriceNum = Number(formatAmount(toTokenInfo.maxPrice, 30, 2, 0));
-  const roundLeverage = leverage / 10**4;
-
-  const takeProfitPrice = getSlTpFromPercentage(isLong, true, takeProfitPercentage, openPriceNum, roundLeverage, feesUsd);
-  const stopLossPrice = getSlTpFromPercentage(isLong, false, stopLossPercentage, openPriceNum, roundLeverage, feesUsd);
   
   const nativeTokenSymbol = getConstant(chainId, "nativeTokenSymbol");
   
@@ -211,7 +207,33 @@ export default function ConfirmationBox(props) {
     });
   }, [existingPosition, existingTriggerOrders, isSwap]);
 
+  const takeProfit = Number(formatForContract(TPValue, 10).toFixed(0));
+  const stopLoss = Number(formatForContract(SLValue, 10).toFixed(0));
+  const openPrice = Number(formatAmount(toTokenInfo.maxPrice, 20, 0, 0));
   const getError = () => {
+
+    
+    if (stopLoss) {
+      if ((isLong && stopLoss > openPrice) || (!isLong && stopLoss < openPrice)) {
+        setSLHasError(true);
+        return `${isLong ? 'Long' : 'Short'} Stop Loss can't be ${isLong ? 'greater' : 'less'} than entry price.`;
+      } else {
+        setSLHasError(false);
+      }
+    } else {
+      setSLHasError(false);
+    }
+    if (takeProfit) {
+      if ((isLong && takeProfit < openPrice) || (!isLong && takeProfit > openPrice)) {
+        setTPHasError(true);
+        return `${isLong ? 'Long' : 'Short'} Take Profit can't be ${isLong ? 'less' : 'greater'} than entry price.`;
+      } else {
+        setTPHasError(false);
+      }
+    } else {
+      setTPHasError(false);
+    }
+    
     if (!isSwap && hasExistingPosition && !isMarketOrder) {
       const { delta, hasProfit } = calculatePositionDelta(triggerPriceUsd, existingPosition);
       if (hasProfit && delta.eq(0)) {
@@ -228,6 +250,7 @@ export default function ConfirmationBox(props) {
     if (decreaseOrdersThatWillBeExecuted.length > 0 && !isTriggerWarningAccepted) {
       return `Accept confirmation of trigger orders`;
     }
+
 
     if (!isPendingConfirmation) {
       const error = getError();
@@ -705,25 +728,17 @@ export default function ConfirmationBox(props) {
           {
             market === 'GNS' &&
             <>
-              <ExchangeInfoRow label="Take Profit">
-                {takeProfitPercentage &&
-                  `$${formatAmount(takeProfitPrice, 10, 2)}`}
-              </ExchangeInfoRow>
               <NumberInput_v2 
                 value={TPValue}
                 setValue={setTPValue}
-                placeholder={"Set Take Profit (%)"}
-                fractionForbidden={true}
+                placeholder={"Set Take Profit"}
+                hasError={TPHasError}
               />
-              <ExchangeInfoRow label="Stop Loss">
-                {stopLossPercentage &&
-                  `$${formatAmount(stopLossPrice, 10, 2)}`}
-              </ExchangeInfoRow>
               <NumberInput_v2 
                 value={SLValue}
                 setValue={setSLValue}
-                placeholder={"Set Stop Loss (%)"}
-                fractionForbidden={true}
+                placeholder={"Set Stop Loss"}
+                hasError={SLHasError}
               />
             </>
           }

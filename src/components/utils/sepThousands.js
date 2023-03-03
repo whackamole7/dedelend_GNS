@@ -51,6 +51,10 @@ export const sepToNumber = (str, symb = ' ') => {
 	if (typeof str !== 'string') {
 		return str;
 	}
+
+	if (symb === ' ' && str.split(symb).length === 1) {
+		symb = ',';
+	}
 	
 	return Number(str.split(symb).join(''));
 }
