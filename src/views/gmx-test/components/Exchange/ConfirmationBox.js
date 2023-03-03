@@ -125,8 +125,8 @@ export default function ConfirmationBox(props) {
   const openPriceNum = Number(formatAmount(toTokenInfo.maxPrice, 30, 2, 0));
   const roundLeverage = leverage / 10**4;
 
-  const takeProfitPrice = getSlTpFromPercentage(true, takeProfitPercentage, openPriceNum, roundLeverage);
-  const stopLossPrice = getSlTpFromPercentage(false, stopLossPercentage, openPriceNum, roundLeverage);
+  const takeProfitPrice = getSlTpFromPercentage(isLong, true, takeProfitPercentage, openPriceNum, roundLeverage);
+  const stopLossPrice = getSlTpFromPercentage(isLong, false, stopLossPercentage, openPriceNum, roundLeverage);
   
   const nativeTokenSymbol = getConstant(chainId, "nativeTokenSymbol");
   

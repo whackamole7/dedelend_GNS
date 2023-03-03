@@ -2061,8 +2061,8 @@ export default function SwapBox(props) {
     const stopLossPercentage = formatForContract(SLValue, 0);
     const openPriceNum = Number(formatAmount(toTokenInfo.maxPrice, 30, 2, 0));
 
-    const takeProfit = getSlTpFromPercentage(true, takeProfitPercentage, openPriceNum, roundLeverage);
-    const stopLoss = getSlTpFromPercentage(false, stopLossPercentage, openPriceNum, roundLeverage);
+    const takeProfit = getSlTpFromPercentage(isLong, true, takeProfitPercentage, openPriceNum, roundLeverage);
+    const stopLoss = getSlTpFromPercentage(isLong, false, stopLossPercentage, openPriceNum, roundLeverage);
 
       
     const fees = BigNumber.from(formatAmount(feesUsd, 12, 0, 0));

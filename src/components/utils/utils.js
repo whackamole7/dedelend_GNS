@@ -1,11 +1,11 @@
 
 
-export const getSlTpFromPercentage = (isTP, percentage, openPriceNum, leverage) => {
+export const getSlTpFromPercentage = (isLong, isTP, percentage, openPriceNum, leverage, fees) => {
 	if (!percentage) {
 		return 0;
 	}
 	
-	if (isTP) {
+	if ((isTP && isLong) || (!isTP && !isLong)) {
 		return (
 			(
 				openPriceNum + (0.01 * openPriceNum * (percentage / leverage))
