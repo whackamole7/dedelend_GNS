@@ -38,7 +38,6 @@ import StatsTooltipRow from "../StatsTooltip/StatsTooltipRow";
 import SlippageInput from './../SlippageInput/SlippageInput';
 import NumberInput_v2 from './../../../../components/UI/input/NumberInput_v2';
 import { formatForContract } from "../../../../components/utils/math";
-import { getSlTpFromPercentage } from './../../../../components/utils/utils';
 
 const HIGH_SPREAD_THRESHOLD = expandDecimals(1, USD_DECIMALS).div(100); // 1%;
 
@@ -121,6 +120,7 @@ export default function ConfirmationBox(props) {
     setTPHasError,
     SLHasError,
     setSLHasError,
+    liquidity,
   } = props;
 
   
@@ -209,14 +209,12 @@ export default function ConfirmationBox(props) {
 
   const takeProfit = Number(formatForContract(TPValue, 10).toFixed(0));
   const stopLoss = Number(formatForContract(SLValue, 10).toFixed(0));
-  const openPrice = Number(formatAmount(toTokenInfo.maxPrice, 20, 0, 0));
+  const price = Number(formatAmount(isMarketOrder ? toTokenInfo.maxPrice : triggerPriceUsd, 20, 0, 0));
   const getError = () => {
-
-    
     if (stopLoss) {
-      if ((isLong && stopLoss > openPrice) || (!isLong && stopLoss < openPrice)) {
+      if ((isLong && stopLoss > price) || (!isLong && stopLoss < price)) {
         setSLHasError(true);
-        return `${isLong ? 'Long' : 'Short'} Stop Loss can't be ${isLong ? 'greater' : 'less'} than entry price.`;
+        return `${isLong ? 'Long' : 'Short'} SL can't be ${isLong ? 'greater' : 'less'} than entry price.`;
       } else {
         setSLHasError(false);
       }
@@ -224,9 +222,9 @@ export default function ConfirmationBox(props) {
       setSLHasError(false);
     }
     if (takeProfit) {
-      if ((isLong && takeProfit < openPrice) || (!isLong && takeProfit > openPrice)) {
+      if ((isLong && takeProfit < price) || (!isLong && takeProfit > price)) {
         setTPHasError(true);
-        return `${isLong ? 'Long' : 'Short'} Take Profit can't be ${isLong ? 'less' : 'greater'} than entry price.`;
+        return `${isLong ? 'Long' : 'Short'} TP can't be ${isLong ? 'less' : 'greater'} than entry price.`;
       } else {
         setTPHasError(false);
       }
@@ -579,6 +577,16 @@ export default function ConfirmationBox(props) {
 
   const renderAvailableLiquidity = useCallback(() => {
     let availableLiquidity;
+
+    if (market === 'GNS') {
+      availableLiquidity = liquidity[market]?.formattedValue;
+      return (
+        <ExchangeInfoRow label="Available Liquidity">
+          ${availableLiquidity}
+        </ExchangeInfoRow>
+      );
+    }
+    
     const riskThresholdBps = 5000;
     let isLiquidityRisk;
     const token = isSwap || isLong ? toTokenInfo : shortCollateralToken;
@@ -756,7 +764,7 @@ export default function ConfirmationBox(props) {
             </ExchangeInfoRow>
           )}
           {!isMarketOrder && (
-            <ExchangeInfoRow label="Limit Price" isTop={true}>
+            <ExchangeInfoRow label="Limit Price">
               ${formatAmount(triggerPriceUsd, USD_DECIMALS, 2, true)}
             </ExchangeInfoRow>
           )}
@@ -804,12 +812,18 @@ export default function ConfirmationBox(props) {
               </ExchangeInfoRow>
             </div>
           )}
-          {isMarketOrder && (
-            <SlippageInput
-              value={userSlippage}
-              setValue={setUserSlippage}
-             />
+          {decreaseOrdersThatWillBeExecuted.length > 0 && (
+            <div className="PositionEditor-allow-higher-slippage">
+              <Checkbox isChecked={isTriggerWarningAccepted} setIsChecked={setIsTriggerWarningAccepted}>
+                <span className="muted font-sm">I am aware of the trigger orders</span>
+              </Checkbox>
+            </div>
           )}
+          {renderExecutionFee()}
+          <SlippageInput
+            value={userSlippage}
+            setValue={setUserSlippage}
+            />
           <ExchangeInfoRow label="Allowed Slippage" className="Slippage-row">
             <Tooltip
               handle={`${formatAmount(allowedSlippage, 2, 2)}%`}
@@ -827,14 +841,6 @@ export default function ConfirmationBox(props) {
               }}
             />
           </ExchangeInfoRow>
-          {decreaseOrdersThatWillBeExecuted.length > 0 && (
-            <div className="PositionEditor-allow-higher-slippage">
-              <Checkbox isChecked={isTriggerWarningAccepted} setIsChecked={setIsTriggerWarningAccepted}>
-                <span className="muted font-sm">I am aware of the trigger orders</span>
-              </Checkbox>
-            </div>
-          )}
-          {renderExecutionFee()}
         </div>
       </>
     );

@@ -407,7 +407,7 @@ export default function SwapBox(props) {
   };
 
   const { data: liquidityData, error: liquidityDataError } = useSWR(
-    active && [active, chainId, GNS_Storage.address, toTokenInfo, "getLiquidity", account],
+    active && [active, chainId, GNS_Storage.address, toTokenInfo, "getLiquidityGNS", account],
     async () => {
       const liqs = {};
       const curPairSymbol = toTokenInfo.symbol;
@@ -1895,16 +1895,19 @@ export default function SwapBox(props) {
       return;
     }
 
-    if (orderOption === LIMIT) {
-      createIncreaseOrder();
-      return;
-    }
-
     switch(suitableMarket.name) {
       case 'GMX':
+        if (orderOption === LIMIT) {
+          createIncreaseOrder();
+          return;
+        }
         increasePosition();
         return;
       case 'GNS':
+        if (orderOption === LIMIT) {
+          openTrade(triggerPriceUsd);
+          return;
+        }
         openTrade();
         return;
       default:
@@ -1988,6 +1991,7 @@ export default function SwapBox(props) {
   const showTriggerPriceSection = !isSwap && !isMarketOrder && !isStopOrder;
   const showTriggerRatioSection = isSwap && !isMarketOrder && !isStopOrder;
 
+
   let fees;
   let feesUsd;
   let feeBps;
@@ -2049,16 +2053,18 @@ export default function SwapBox(props) {
   const [SLHasError, setSLHasError] = useState(false);
   
   
-  const openTrade = async () => {
+  const openTrade = async (price) => {
     setIsSubmitting(true);
     
     const pairIndex = toToken.symbol === 'UNI' ?
       17 : GNS_PAIRS.findIndex(pair => toToken.symbol === pair);
     const posSize = ethers.utils.parseEther(fromValue);
-    const openPrice = formatAmount(toTokenInfo.maxPrice, 20, 0, 0);
+    const openPrice = formatAmount(price ?? toTokenInfo.maxPrice, 20, 0, 0);
     const roundLeverage = leverage / 10**4;
     const typeOfOrder = isMarketOrder ? 0 : 1;
     const slippage = userSlippage * 10**10;
+
+    console.log(openPrice.toString());
 
     const takeProfit = (formatForContract(TPValue, 10)).toFixed(0);
     const stopLoss = (formatForContract(SLValue, 10)).toFixed(0);
@@ -2089,7 +2095,7 @@ export default function SwapBox(props) {
       
       tsc.wait()
         .then(() => {
-          notifySuccess('Position opened!', tsc.hash);
+          notifySuccess(`${isMarketOrder ? 'Position' : 'Limit Order'} submitted!`, tsc.hash);
         })
     }, errAlert)
     .finally(() => {
@@ -2806,6 +2812,7 @@ export default function SwapBox(props) {
           setSLHasError={setSLHasError}
           TPHasError={TPHasError}
           setTPHasError={setTPHasError}
+          liquidity={liquidity}
         />
       )}
       {renderModal()}

@@ -37,6 +37,7 @@ export default function OrdersList(props) {
     totalTokenWeights,
     usdgSupply,
     orders,
+    ordersGNS,
     hideActions,
     chainId,
     savedShouldDisableValidationForTesting,

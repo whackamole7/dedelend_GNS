@@ -526,7 +526,7 @@ export const Exchange = forwardRef((props, ref) => {
           pairIndex = 17;
         }
         
-        for (let j = 0; j < 4; j++) {
+        for (let j = 0; j < 3; j++) {
           const index = j;
           position = await contract.openTrades(account, pairIndex, index);
           if (position.trader === ADDRESS_ZERO) {
@@ -771,6 +771,37 @@ export const Exchange = forwardRef((props, ref) => {
 
   const flagOrdersEnabled = true;
   const [orders] = useAccountOrders(flagOrdersEnabled, account);
+  
+  const { data: ordersGNS, error: ordersGNSError } = useSWR(
+    active && [active, chainId, GNS_Storage.address, "getOrdersGNS", account],
+    async () => {
+      const orders = [];
+      let order;
+
+      const contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, library.getSigner());
+
+      for (let i = 0; i < GNS_PAIRS.length + 1; i++) {
+        let pairIndex = i;
+        if (pairIndex === 3) {
+          pairIndex = 17;
+        }
+        
+        for (let j = 0; j < 3; j++) {
+          const index = j;
+
+          try {
+            order = await contract.getOpenLimitOrder(account, pairIndex, index);
+          } catch(e) {
+            continue;
+          }
+          
+          orders.push(order);
+        }
+      }
+
+      return orders;
+    }
+  );
 
   const [isWaitingForPluginApproval, setIsWaitingForPluginApproval] = useState(false);
   const [isWaitingForPositionRouterApproval, setIsWaitingForPositionRouterApproval] = useState(false);
@@ -954,6 +985,7 @@ export const Exchange = forwardRef((props, ref) => {
             positionsMap={positionsMap}
             chainId={chainId}
             orders={orders}
+            ordersGNS={ordersGNS}
             totalTokenWeights={totalTokenWeights}
             usdgSupply={usdgSupply}
             savedShouldDisableValidationForTesting={savedShouldDisableValidationForTesting}
