@@ -24,10 +24,14 @@
   &:last-child::before {
     display: none;
   }
-}
-
-.TradeHistory-row.Exchange-list-empty-note::before {
-  display: none;
+  
+  &.Exchange-list-empty-note {
+    padding: 17px 22px!important;
+    
+    &::before {
+      display: none;
+    }
+  }
 }
 
 .TradeHistory-row.App-box {

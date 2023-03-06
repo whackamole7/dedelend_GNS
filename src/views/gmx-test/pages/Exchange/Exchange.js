@@ -54,6 +54,7 @@ import { fetcher } from "../../lib/contracts/fetcher";
 import GNS_Storage from "../../abis/GNS/GNS_Storage.json";
 import { GNS_PAIRS } from './../../lib/GNS_legacy';
 import { ADDRESS_ZERO } from '@uniswap/v3-sdk';
+import { signer } from './../../../../components/utils/providers';
 
 
 const { AddressZero } = ethers.constants;
@@ -397,7 +398,6 @@ export const Exchange = forwardRef((props, ref) => {
     }
   }, [showBanner, bannerHidden, setBannerHidden, setShowBanner]);
 
-  // const { active, account, library } = useWeb3React();
   const { account, library } = useWeb3React();
   const active = Boolean(props.walletAddress);
   const { chainId } = useChainId();
@@ -520,11 +520,9 @@ export const Exchange = forwardRef((props, ref) => {
       const contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, library.getSigner());
       const keys = [];
       
-      for (let i = 0; i < GNS_PAIRS.length + 1; i++) {
-        let pairIndex = i;
-        if (pairIndex === 3) {
-          pairIndex = 17;
-        }
+      for (let i = 0; i < Object.keys(GNS_PAIRS).length; i++) {
+        const pair = Object.keys(GNS_PAIRS)[i];
+        let pairIndex = GNS_PAIRS[pair];
         
         for (let j = 0; j < 3; j++) {
           const index = j;
@@ -772,7 +770,7 @@ export const Exchange = forwardRef((props, ref) => {
   const flagOrdersEnabled = true;
   const [orders] = useAccountOrders(flagOrdersEnabled, account);
   
-  const { data: ordersGNS, error: ordersGNSError } = useSWR(
+  const { data: ordersGNSData, error: ordersGNSDataError } = useSWR(
     active && [active, chainId, GNS_Storage.address, "getOrdersGNS", account],
     async () => {
       const orders = [];
@@ -780,28 +778,33 @@ export const Exchange = forwardRef((props, ref) => {
 
       const contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, library.getSigner());
 
-      for (let i = 0; i < GNS_PAIRS.length + 1; i++) {
-        let pairIndex = i;
-        if (pairIndex === 3) {
-          pairIndex = 17;
-        }
+      for (let i = 0; i < Object.keys(GNS_PAIRS).length; i++) {
+        const pair = Object.keys(GNS_PAIRS)[i];
+        let pairIndex = GNS_PAIRS[pair];
         
         for (let j = 0; j < 3; j++) {
           const index = j;
 
           try {
             order = await contract.getOpenLimitOrder(account, pairIndex, index);
+            orders.push(order);
           } catch(e) {
-            continue;
           }
-          
-          orders.push(order);
         }
       }
-
+      
       return orders;
     }
   );
+  
+  const [ordersGNS, setOrdersGNS] = useState([]);
+  useEffect(() => {
+    if (!ordersGNSData || !ordersGNSData.length) {
+      return;
+    }
+    
+    setOrdersGNS(ordersGNSData);
+  }, [ordersGNSData]);
 
   const [isWaitingForPluginApproval, setIsWaitingForPluginApproval] = useState(false);
   const [isWaitingForPositionRouterApproval, setIsWaitingForPositionRouterApproval] = useState(false);
@@ -919,18 +922,6 @@ export const Exchange = forwardRef((props, ref) => {
             type="inline"
             className="Exchange-list-tabs"
           />
-          {/* <div className="align-right Exchange-should-show-position-lines">
-            {renderCancelOrderButton()}
-            <Checkbox
-              isChecked={savedShouldShowPositionLines}
-              setIsChecked={setSavedShouldShowPositionLines}
-              className={cx("muted chart-positions", { active: savedShouldShowPositionLines })}
-            >
-              <span>
-                <Trans>Chart positions</Trans>
-              </span>
-            </Checkbox>
-          </div> */}
         </div>
         {listSection === "Positions" && (
           <PositionsList

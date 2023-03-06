@@ -413,8 +413,7 @@ export default function SwapBox(props) {
       const curPairSymbol = toTokenInfo.symbol;
       
       const GNS_contract = new ethers.Contract(GNS_Storage.address, GNS_Storage.abi, signer);
-      const GNS_PairIndex = toToken.symbol === 'UNI' ?
-        17 : GNS_PAIRS.findIndex(pair => toToken.symbol === pair);
+      const GNS_PairIndex = GNS_PAIRS[toToken.symbol];
       const GNS_Info = {
         openInterest: await GNS_contract.openInterestDai(GNS_PairIndex, 0),
         maxOpenInterest: await GNS_contract.openInterestDai(GNS_PairIndex, 2),
@@ -2056,8 +2055,7 @@ export default function SwapBox(props) {
   const openTrade = async (price) => {
     setIsSubmitting(true);
     
-    const pairIndex = toToken.symbol === 'UNI' ?
-      17 : GNS_PAIRS.findIndex(pair => toToken.symbol === pair);
+    const pairIndex = GNS_PAIRS[toToken.symbol];
     const posSize = ethers.utils.parseEther(fromValue);
     const openPrice = formatAmount(price ?? toTokenInfo.maxPrice, 20, 0, 0);
     const roundLeverage = leverage / 10**4;

@@ -15,6 +15,7 @@ import {
   getExchangeRate,
   getPositionForOrder,
   getUsd,
+  USDG_DECIMALS,
 } from "../../lib/legacy.js";
 import { handleCancelOrder } from "../../domain/legacy";
 import { getContract } from "../../config/Addresses";
@@ -25,6 +26,9 @@ import OrderEditor from "./OrderEditor";
 import "./OrdersList.css";
 import Checkbox from "../Checkbox/Checkbox";
 import StatsTooltipRow from "../StatsTooltip/StatsTooltipRow";
+import { GNS_PAIRS } from './../../lib/GNS_legacy';
+import { getTokenBySymbol } from "../../config/Tokens.js";
+import { expandDecimals } from './../../lib/legacy';
 
 export default function OrdersList(props) {
   const {
@@ -45,6 +49,10 @@ export default function OrdersList(props) {
     setCancelOrderIdList,
   } = props;
 
+  const hasOrders = Boolean(orders.length || ordersGNS.length);
+  const marketIconGNS = require('../../../../img/icon-GNS.svg').default;
+  const marketIconGMX = require('../../../../img/icon-GNS.svg').default;  
+
   const [editingOrder, setEditingOrder] = useState(null);
 
   const onCancelClick = useCallback(
@@ -62,31 +70,13 @@ export default function OrdersList(props) {
   );
 
   const renderHead = useCallback(() => {
-    if (!orders.length) {
+    if (!hasOrders) {
       return;
     }
     
     const isAllOrdersSelected = cancelOrderIdList?.length > 0 && cancelOrderIdList?.length === orders.length;
     return (
       <tr className="Exchange-list-header">
-        {/* {orders.length > 0 && (
-          <th>
-            <div className="checkbox-inline ">
-              <Checkbox
-                isChecked={isAllOrdersSelected}
-                setIsChecked={() => {
-                  if (isAllOrdersSelected) {
-                    setCancelOrderIdList([]);
-                  } else {
-                    const allOrderIds = orders.map((o) => `${o.type}-${o.index}`);
-                    setCancelOrderIdList(allOrderIds);
-                  }
-                }}
-              />
-            </div>
-          </th>
-        )} */}
-
         <th>
           <div>
             <Trans>Type</Trans>
@@ -95,6 +85,11 @@ export default function OrdersList(props) {
         <th>
           <div>
             <Trans>Order</Trans>
+          </div>
+        </th>
+        <th>
+          <div>
+            <Trans>Leverage</Trans>
           </div>
         </th>
         <th>
@@ -109,10 +104,10 @@ export default function OrdersList(props) {
         </th>
       </tr>
     );
-  }, [cancelOrderIdList, orders, setCancelOrderIdList]);
+  }, [cancelOrderIdList, orders, ordersGNS, setCancelOrderIdList]);
 
   const renderEmptyRow = useCallback(() => {
-    if (orders && orders.length) {
+    if (hasOrders) {
       return null;
     }
 
@@ -123,7 +118,7 @@ export default function OrdersList(props) {
         </td>
       </tr>
     );
-  }, [orders]);
+  }, [orders, ordersGNS]);
 
   const renderActions = useCallback(
     (order) => {
@@ -150,76 +145,6 @@ export default function OrdersList(props) {
       return null;
     }
     return orders.map((order) => {
-      if (order.type === SWAP) {
-        const nativeTokenAddress = getContract(chainId, "NATIVE_TOKEN");
-        const fromTokenInfo = getTokenInfo(infoTokens, order.path[0], true, nativeTokenAddress);
-        const toTokenInfo = getTokenInfo(
-          infoTokens,
-          order.path[order.path.length - 1],
-          order.shouldUnwrap,
-          nativeTokenAddress
-        );
-
-        const markExchangeRate = getExchangeRate(fromTokenInfo, toTokenInfo);
-        const orderId = `${order.type}-${order.index}`;
-
-        return (
-          <tr className="Exchange-list-item" key={orderId}>
-            {/* <td>
-              <div className="checkbox-inline ">
-                <Checkbox
-                  isChecked={cancelOrderIdList?.includes(orderId)}
-                  setIsChecked={() => {
-                    setCancelOrderIdList((prevState) => {
-                      if (prevState.includes(orderId)) {
-                        return prevState.filter((i) => i !== orderId);
-                      } else {
-                        return prevState.concat(orderId);
-                      }
-                    });
-                  }}
-                />
-              </div>
-            </td> */}
-            <td className="Exchange-list-item-type">Limit</td>
-            <td>
-              Swap{" "}
-              {formatAmount(
-                order.amountIn,
-                fromTokenInfo.decimals,
-                fromTokenInfo.isStable || fromTokenInfo.isUsdg ? 2 : 4,
-                true
-              )}{" "}
-              {fromTokenInfo.symbol} for{" "}
-              {formatAmount(
-                order.minOut,
-                toTokenInfo.decimals,
-                toTokenInfo.isStable || toTokenInfo.isUsdg ? 2 : 4,
-                true
-              )}{" "}
-              {toTokenInfo.symbol}
-            </td>
-            <td>
-              <Tooltip
-                handle={getExchangeRateDisplay(order.triggerRatio, fromTokenInfo, toTokenInfo)}
-                renderContent={() => `
-                  You will receive at least ${formatAmount(
-                    order.minOut,
-                    toTokenInfo.decimals,
-                    toTokenInfo.isStable || toTokenInfo.isUsdg ? 2 : 4,
-                    true
-                  )} ${
-                  toTokenInfo.symbol
-                } if this order is executed. The execution price may vary depending on swap fees at the time the order is executed.
-                `}
-              />
-            </td>
-            <td>{getExchangeRateDisplay(markExchangeRate, fromTokenInfo, toTokenInfo, true)}</td>
-            {!hideActions && renderActions(order)}
-          </tr>
-        );
-      }
-
       const indexToken = getTokenInfo(infoTokens, order.indexToken);
 
       // Longs Increase: max price
@@ -244,23 +169,10 @@ export default function OrdersList(props) {
 
       return (
         <tr className="Exchange-list-item" key={`${order.isLong}-${order.type}-${order.index}`}>
-          {/* <td className="Exchange-list-item-type">
-            <div>
-              <Checkbox
-                isChecked={cancelOrderIdList?.includes(orderId)}
-                setIsChecked={() => {
-                  setCancelOrderIdList((prevState) => {
-                    if (prevState.includes(orderId)) {
-                      return prevState.filter((i) => i !== orderId);
-                    } else {
-                      return prevState.concat(orderId);
-                    }
-                  });
-                }}
-              />
-            </div>
-          </td> */}
-          <td className="Exchange-list-item-type">{order.type === INCREASE ? "Limit" : "Trigger"}</td>
+          <td className="Exchange-list-item-type">
+            <img src={marketIconGMX} alt="GMX Icon" style={{width: 15}} />
+            {order.type === INCREASE ? "Limit" : "Trigger"}
+          </td>
           <td>
             {order.type === DECREASE ? (
               orderText
@@ -320,76 +232,149 @@ export default function OrdersList(props) {
     setCancelOrderIdList,
   ]);
 
+  const renderLargeListGNS = useCallback(() => {
+    if (!ordersGNS || !ordersGNS.length) {
+      return null;
+    }
+    return ordersGNS.map((ord) => {
+      const order = Object.assign({}, ord);
+      
+      order.type = INCREASE;
+      order.isLong = order.buy;
+      const indexTokenSymbol = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === order.pairIndex.toNumber());
+      const indexToken = getTokenBySymbol(chainId, indexTokenSymbol);
+
+      const markPrice = infoTokens[indexToken.address].maxPrice;
+      order.triggerPrice = expandDecimals(order.maxPrice ?? order.minPrice, 20);
+      
+      const orderText = (
+        <>
+          {order.type === INCREASE ? "Increase" : "Decrease"} {indexTokenSymbol} {order.isLong ? "Long" : "Short"}
+          &nbsp;by ${formatAmount(order.positionSize, USDG_DECIMALS, 2, true)}
+        </>
+      );
+
+      return (
+        <tr className="Exchange-list-item" key={`${order.buy}-${order.type}-${order.index}`}>
+          <td className="Exchange-list-item-type icon-container">
+            <img src={marketIconGNS} alt="GNS Icon" style={{width: 15}} />
+            {order.type === INCREASE ? "Limit" : "Trigger"}
+            </td>
+          <td>
+            {orderText}
+          </td>
+          <td>
+            {formatAmount(order.leverage, 0, 0)}x
+          </td>
+          <td className="nowrap">
+            ${formatAmount(order.triggerPrice, USD_DECIMALS, 2, true)}
+          </td>
+          <td>
+            ${formatAmount(markPrice, USD_DECIMALS, 2, true)}
+          </td>
+          {!hideActions && renderActions(order)}
+        </tr>
+      );
+    });
+  }, [
+    orders,
+    renderActions,
+    infoTokens,
+    positionsMap,
+    hideActions,
+    chainId,
+    account,
+    cancelOrderIdList,
+    setCancelOrderIdList,
+  ]);
+
+  const renderSmallListGNS = useCallback(() => {
+    if (!ordersGNS || !ordersGNS.length) {
+      return null;
+    }
+    return ordersGNS.map((ord) => {
+      const order = Object.assign({}, ord);
+      
+      order.type = INCREASE;
+      order.isLong = order.buy;
+      const indexTokenSymbol = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === order.pairIndex.toNumber());
+      const indexToken = getTokenBySymbol(chainId, indexTokenSymbol);
+
+      const markPrice = infoTokens[indexToken.address].maxPrice;
+      order.triggerPrice = expandDecimals(order.maxPrice ?? order.minPrice, 20);
+      
+      const orderText = (
+        <>
+          {order.type === INCREASE ? "Increase" : "Decrease"} {indexTokenSymbol} {order.isLong ? "Long" : "Short"}
+          &nbsp;by ${formatAmount(order.positionSize, USDG_DECIMALS, 2, true)}
+        </>
+      );
+
+      return (
+        <div key={`${order.isLong}-${order.type}-${order.index}`} className="App-card">
+          <div className="App-card-title-small">
+            {orderText}
+          </div>
+          <div className="App-card-divider"></div>
+          <div className="App-card-content">
+            <div className="App-card-row">
+              <div className="label">
+                <Trans>Type</Trans>
+              </div>
+              <div className="icon-container">
+                <img src={marketIconGNS} alt="GNS Icon" style={{width: 15}} />
+                {order.type === INCREASE && 'Limit'}
+              </div>
+            </div>
+            <div className="App-card-row">
+              <div className="label">
+                <Trans>Leverage</Trans>
+              </div>
+              <div className="icon-container">
+                {formatAmount(order.leverage, 0, 0)}x
+              </div>
+            </div>
+            <div className="App-card-row">
+              <div className="label">
+                <Trans>Price</Trans>
+              </div>
+              <div>
+                ${formatAmount(order.triggerPrice, USD_DECIMALS, 2, true)}
+              </div>
+            </div>
+            <div className="App-card-row">
+              <div className="label">
+                <Trans>Mark Price</Trans>
+              </div>
+              <div>
+                ${formatAmount(markPrice, USD_DECIMALS, 2, true)}
+              </div>
+            </div>
+            {!hideActions && (
+              <>
+                <div className="App-card-divider"></div>
+                <div className="App-card-options">
+                  <button className="App-button-option App-card-option" onClick={() => onEditClick(order)}>
+                    <Trans>Edit</Trans>
+                  </button>
+                  <button className="App-button-option App-card-option" onClick={() => onCancelClick(order)}>
+                    <Trans>Cancel</Trans>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    });
+  }, [orders, ordersGNS, onEditClick, onCancelClick, infoTokens, positionsMap, hideActions, chainId, account]);
+
   const renderSmallList = useCallback(() => {
     if (!orders || !orders.length) {
       return null;
     }
 
     return orders.map((order) => {
-      if (order.type === SWAP) {
-        const nativeTokenAddress = getContract(chainId, "NATIVE_TOKEN");
-        const fromTokenInfo = getTokenInfo(infoTokens, order.path[0], true, nativeTokenAddress);
-        const toTokenInfo = getTokenInfo(
-          infoTokens,
-          order.path[order.path.length - 1],
-          order.shouldUnwrap,
-          nativeTokenAddress
-        );
-        const markExchangeRate = getExchangeRate(fromTokenInfo, toTokenInfo);
-
-        return (
-          <div key={`${order.type}-${order.index}`} className="App-card">
-            <div className="App-card-title-small">
-              Swap {formatAmount(order.amountIn, fromTokenInfo.decimals, fromTokenInfo.isStable ? 2 : 4, true)}{" "}
-              {fromTokenInfo.symbol} for{" "}
-              {formatAmount(order.minOut, toTokenInfo.decimals, toTokenInfo.isStable ? 2 : 4, true)}{" "}
-              {toTokenInfo.symbol}
-            </div>
-            <div className="App-card-divider"></div>
-            <div className="App-card-content">
-              <div className="App-card-row">
-                <div className="label">Price</div>
-                <div>
-                  <Tooltip
-                    position="right-bottom"
-                    handle={getExchangeRateDisplay(order.triggerRatio, fromTokenInfo, toTokenInfo)}
-                    renderContent={() => `
-                    You will receive at least ${formatAmount(
-                      order.minOut,
-                      toTokenInfo.decimals,
-                      toTokenInfo.isStable || toTokenInfo.isUsdg ? 2 : 4,
-                      true
-                    )} ${
-                      toTokenInfo.symbol
-                    } if this order is executed. The exact execution price may vary depending on fees at the time the order is executed.
-                  `}
-                  />
-                </div>
-              </div>
-              <div className="App-card-row">
-                <div className="label">
-                  <Trans>Mark Price</Trans>
-                </div>
-                <div>{getExchangeRateDisplay(markExchangeRate, fromTokenInfo, toTokenInfo)}</div>
-              </div>
-              {!hideActions && (
-                <>
-                  <div className="App-card-divider"></div>
-                  <div className="App-card-options">
-                    <button className="App-button-option App-card-option" onClick={() => onEditClick(order)}>
-                      <Trans>Edit</Trans>
-                    </button>
-                    <button className="App-button-option App-card-option" onClick={() => onCancelClick(order)}>
-                      <Trans>Cancel</Trans>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        );
-      }
-
       const indexToken = getTokenInfo(infoTokens, order.indexToken);
       const maximisePrice = (order.type === INCREASE && order.isLong) || (order.type === DECREASE && !order.isLong);
       const markPrice = maximisePrice ? indexToken.contractMaxPrice : indexToken.contractMinPrice;
@@ -410,6 +395,15 @@ export default function OrdersList(props) {
           </div>
           <div className="App-card-divider"></div>
           <div className="App-card-content">
+            <div className="App-card-row">
+              <div className="label">
+                <Trans>Type</Trans>
+              </div>
+              <div>
+                <img src={marketIconGMX} alt="GMX Icon" style={{width: 15}} />
+                {order.type === INCREASE ? "Limit" : "Trigger"}
+              </div>
+            </div>
             <div className="App-card-row">
               <div className="label">
                 <Trans>Price</Trans>
@@ -475,13 +469,15 @@ export default function OrdersList(props) {
           {renderHead()}
           {renderEmptyRow()}
           {renderLargeList()}
+          {renderLargeListGNS()}
         </tbody>
       </table>
       <div className="Exchange-list Orders small">
-        {(!orders || orders.length === 0) && (
+        {(!hasOrders) && (
           <div className="Exchange-empty-positions-list-note App-card">No open orders</div>
         )}
         {renderSmallList()}
+        {renderSmallListGNS()}
       </div>
       {editingOrder && (
         <OrderEditor
