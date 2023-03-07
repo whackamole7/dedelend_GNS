@@ -3,7 +3,7 @@ import Tooltip from './../Tooltip/Tooltip';
 import { formatAmount } from '../../lib/legacy';
 import { ImSpinner2 } from 'react-icons/im';
 import { t } from '@lingui/macro';
-import { USD_DECIMALS, INCREASE } from './../../lib/legacy';
+import { USD_DECIMALS, INCREASE, STOP } from './../../lib/legacy';
 import StatsTooltipRow from '../StatsTooltip/StatsTooltipRow';
 import { Trans } from '@lingui/macro';
 import './PositionsItem.scss';
@@ -24,10 +24,9 @@ const PositionsItem = (props) => {
 		borrowFeeUSD,
 		editPosition,
 		sellPosition,
-		setStopLoss,
-		setTakeProfit,
 		isLarge,
 		isPending,
+		openSLTPModal,
 	} = props;
 
 	const [isCloseLoading, setIsCloseLoading] = useState(false);
@@ -38,6 +37,46 @@ const PositionsItem = (props) => {
 		position.hasPendingChanges = isPending;
 	}
 
+	const openOrderModal = (market, isTP, position) => {
+		if (market === 'GNS') {
+			openSLTPModal(isTP, position);
+		}
+		if (market === 'GMX') {
+			const orderName = isTP ? 'TP' : 'SL';
+			if (triggerPricesGMX[orderName]) {
+				setListSection && setListSection("Orders");
+			} else {
+				sellPosition(position, setIsCloseLoading, STOP);
+			}
+			
+		}
+	}
+
+	const triggerOrdersGMX = positionOrders?.filter(order => {
+		return order.type === 'Decrease';
+	});
+	const triggerPricesGMX = {
+		SL: undefined,
+		TP: undefined,
+	}
+	triggerOrdersGMX.map(order => {
+		const price = order.triggerPrice;
+
+		if (position.isLong) {
+			if (price.gt(position.averagePrice)) {
+				triggerPricesGMX.TP = price;
+			} else if (price.lt(position.averagePrice)) {
+				triggerPricesGMX.SL = price;
+			}
+		} else {
+			if (price.gt(position.averagePrice)) {
+				triggerPricesGMX.SL = price;
+			} else if (price.lt(position.averagePrice)) {
+				triggerPricesGMX.TP = price;
+			}
+		}
+	})
+	
 	return (
 		<>
 			{isLarge ?
@@ -176,40 +215,46 @@ const PositionsItem = (props) => {
 						
 					</td>
 					<td>
-						{/* <button
-							className="Exchange-list-action"
-							onClick={() => setStopLoss(position)}
-							disabled={position.size.eq(0)}
-						>
-							Set SL
-						</button> */}
-							{position.market === 'GNS' && position.sl &&
-								(
-									position.sl.eq(0) ?
-									'—' : ('$' + formatAmount(position.sl, 10, 2, true))
-								)
-							}
-							{position.market === 'GMX' &&
-								'—'
-							}
-					</td>
-					<td>
-						{/* <button
-							className="Exchange-list-action"
-							onClick={() => setTakeProfit(position)}
-							disabled={position.size.eq(0)}
-						>
-							Set TP
-						</button> */}
-						{position.market === 'GNS' && position.tp &&
+						{position.market === 'GNS' && position.sl &&
 							(
-								position.tp.eq(0) ?
-								'—' : ('$' + formatAmount(position.tp, 10, 2, true))
+								!position.sl?.eq(0) &&
+									('$' + formatAmount(position.sl, 10, 2, true))
 							)
 						}
-						{position.market === 'GMX' &&
-							'—'
+						{position.market === 'GMX' && (triggerPricesGMX.SL 
+							? ('$' + formatAmount(triggerPricesGMX.SL, USD_DECIMALS, 2, true))
+							: '—')
 						}
+						<button
+							className="Exchange-list-action"
+							onClick={() => openOrderModal(position.market, false, position)}
+							disabled={!position.size}
+						>
+							{position.sl?.eq(0)
+								? 'Set SL'
+								: <img src={icon_edit} alt="Edit Stop Loss button" />}
+						</button>
+					</td>
+					<td>
+						{position.market === 'GNS' && position.tp &&
+							(
+								!position.tp?.eq(0) &&
+									('$' + formatAmount(position.tp, 10, 2, true))
+							)
+						}
+						{position.market === 'GMX' && (triggerPricesGMX.TP 
+							? ('$' + formatAmount(triggerPricesGMX.TP, USD_DECIMALS, 2, true))
+							: '—')
+						}
+						<button
+							className="Exchange-list-action"
+							onClick={() => openOrderModal(position.market, true, position)}
+							disabled={!position.size}
+						>
+							{position.tp?.eq(0)
+								? 'Set TP'
+								: <img src={icon_edit} alt="Edit Take Profit button" />}
+						</button>
 					</td>
 					<td className="td-btn pos-relative">
 						{
@@ -220,27 +265,14 @@ const PositionsItem = (props) => {
 									<button
 										className="Exchange-list-action"
 										onClick={() => {
-											sellPosition(position, setIsCloseLoading);
 											setIsCloseLoading(true);
+											sellPosition(position, setIsCloseLoading);
 										}}
 										disabled={position.size.eq(0)}
 									>
 										Close
 									</button>
 						}
-						
-						{/* <PositionDropdown
-							handleEditCollateral={() => {
-								editPosition(position);
-							}}
-							handleShare={() => {
-								setPositionToShare(position);
-								setIsPositionShareModalOpen(true);
-							}}
-							handleMarketSelect={() => {
-								onPositionClick(position);
-							}}
-						/> */}
 					</td>
 				</tr>
 			:
@@ -299,7 +331,7 @@ const PositionsItem = (props) => {
 						<div className="label">
 							PNL (ROE %)
 						</div>
-						<div style={{ width: 100, display: 'block' }}>
+						<div>
 							{position.deltaStr && (
 								<div
 									className={cx("Exchange-list-info-label", {
@@ -313,51 +345,57 @@ const PositionsItem = (props) => {
 							)}
 						</div>
 					</div>
-					<div className="App-card-row">
+					<div className="App-card-row App-card-row_edit-btn">
 						<div className="label">
 							Stop Loss
 						</div>
-						{/* <button
-							className="Exchange-list-action"
-							onClick={() => setTakeProfit(position)}
-							disabled={position.size.eq(0)}
-						>
-							Set SL
-						</button> */}
 						<div>
 							{position.market === 'GNS' && position.sl &&
 								(
-									position.sl.eq(0) ?
-									'—' : ('$' + formatAmount(position.sl, 10, 2, true))
+									!position.sl?.eq(0) &&
+										('$' + formatAmount(position.sl, 10, 2, true))
 								)
 							}
-							{position.market === 'GMX' &&
-								'—'
+							{position.market === 'GMX' && (triggerPricesGMX.SL 
+								? ('$' + formatAmount(triggerPricesGMX.SL, USD_DECIMALS, 2, true))
+								: '—')
 							}
 						</div>
+						<button
+							className="Exchange-list-action"
+							onClick={() => openOrderModal(position.market, false, position)}
+							disabled={!position.size}
+						>
+							{position.sl?.eq(0)
+								? 'Set SL'
+								: <img src={icon_edit} alt="Edit Stop Loss button" />}
+						</button>
 					</div>
-					<div className="App-card-row">
+					<div className="App-card-row App-card-row_edit-btn">
 						<div className="label">
 							Take Profit
 						</div>
-						{/* <button
-							className="Exchange-list-action"
-							onClick={() => setTakeProfit(position)}
-							disabled={position.size.eq(0)}
-						>
-							Set TP
-						</button> */}
 						<div>
 							{position.market === 'GNS' && position.tp &&
 								(
-									position.tp.eq(0) ?
-									'—' : ('$' + formatAmount(position.tp, 10, 2, true))
+									!position.tp?.eq(0) &&
+										('$' + formatAmount(position.tp, 10, 2, true))
 								)
 							}
-							{position.market === 'GMX' &&
-								'—'
+							{position.market === 'GMX' && (triggerPricesGMX.TP 
+								? ('$' + formatAmount(triggerPricesGMX.TP, USD_DECIMALS, 2, true))
+								: '—')
 							}
 						</div>
+						<button
+							className="Exchange-list-action"
+							onClick={() => openOrderModal(position.market, true, position)}
+							disabled={!position.size}
+						>
+							{position.tp?.eq(0)
+								? 'Set TP'
+								: <img src={icon_edit} alt="Edit Take Profit button" />}
+						</button>
 					</div>
 				</div>
 				<div className="App-card-divider"></div>
@@ -368,7 +406,7 @@ const PositionsItem = (props) => {
 								className="App-button-option App-card-option"
 								disabled={position.size.eq(0)}
 								onClick={() => {
-									sellPosition(position, setIsCloseLoading)
+									sellPosition(position, setIsCloseLoading);
 									setIsCloseLoading(true);
 								}}
 							>

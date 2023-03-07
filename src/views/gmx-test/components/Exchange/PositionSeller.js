@@ -189,6 +189,7 @@ export default function PositionSeller(props) {
     minExecutionFeeErrorMessage,
     usdgSupply,
     totalTokenWeights,
+    initTab,
   } = props;
 
   const [savedSlippageAmount] = useLocalStorageSerializeKey([chainId, SLIPPAGE_BPS_KEY], DEFAULT_SLIPPAGE_AMOUNT);
@@ -225,9 +226,8 @@ export default function PositionSeller(props) {
     allowedSlippage = userSlippage * 100;
   }
 
-  // const orderOptions = [MARKET, STOP];
-  const orderOptions = [];
-  let [orderOption, setOrderOption] = useState(MARKET);
+  const orderOptions = [MARKET, STOP];
+  let [orderOption, setOrderOption] = useState(initTab ?? MARKET);
 
   if (!flagOrdersEnabled) {
     orderOption = MARKET;
@@ -910,7 +910,7 @@ export default function PositionSeller(props) {
           allowContentTouchMove
           isNifty={true}
         >
-          {/* {flagOrdersEnabled && (
+          {flagOrdersEnabled && (
             <Tab
               options={orderOptions}
               option={orderOption}
@@ -918,7 +918,7 @@ export default function PositionSeller(props) {
               onChange={onOrderOptionChange}
               icons={CLOSE_ICONS}
             />
-          )} */}
+          )}
           <div className={"Exchange-swap-section"
             + (hasInputError ? " error" : "") + (hasInputFocus ? " hlight" : "")}>
             <div className="Exchange-swap-section-top">
@@ -996,6 +996,12 @@ export default function PositionSeller(props) {
                     className="Exchange-swap-input"
                     value={triggerPriceValue}
                     onChange={onTriggerPriceChange}
+                    onFocus={(e) => {
+                      e.target.parentElement.parentElement.parentElement.classList.add('hlight');
+                    }}
+                    onBlur={(e) => {
+                      e.target.parentElement.parentElement.parentElement.classList.remove('hlight');
+                    }}
                   />
                 </div>
                 <div className="PositionEditor-token-symbol">USD</div>

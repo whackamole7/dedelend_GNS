@@ -22,7 +22,7 @@ export const separateThousands = (num, symb = ",") => {
 
 
 const removeNonNumeric = (num) => {
-	let result = num.toString().replace(/^\./g, '').replace(/[^0-9.]/g, '').replace(/^0\d/, '')
+	let result = num.toString().replace(/^\./g, '').replace(/[^0-9.]/g, '').replace(/^0\d/, '');
 
 	if (result.match(/\./g)?.length > 1) {
 		result = result.replace(/\.$/, '')

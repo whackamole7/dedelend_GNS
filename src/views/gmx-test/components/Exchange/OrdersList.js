@@ -51,7 +51,7 @@ export default function OrdersList(props) {
 
   const hasOrders = Boolean(orders.length || ordersGNS.length);
   const marketIconGNS = require('../../../../img/icon-GNS.svg').default;
-  const marketIconGMX = require('../../../../img/icon-GNS.svg').default;  
+  const marketIconGMX = require('../../../../img/icon-GMX.svg').default;  
 
   const [editingOrder, setEditingOrder] = useState(null);
 
@@ -169,7 +169,7 @@ export default function OrdersList(props) {
 
       return (
         <tr className="Exchange-list-item" key={`${order.isLong}-${order.type}-${order.index}`}>
-          <td className="Exchange-list-item-type">
+          <td className="Exchange-list-item-type icon-container">
             <img src={marketIconGMX} alt="GMX Icon" style={{width: 15}} />
             {order.type === INCREASE ? "Limit" : "Trigger"}
           </td>
@@ -199,6 +199,7 @@ export default function OrdersList(props) {
               />
             )}
           </td>
+          <td></td>
           <td className="nowrap">
             {triggerPricePrefix} {formatAmount(order.triggerPrice, USD_DECIMALS, 2, true)}
           </td>
@@ -399,7 +400,7 @@ export default function OrdersList(props) {
               <div className="label">
                 <Trans>Type</Trans>
               </div>
-              <div>
+              <div className="icon-container">
                 <img src={marketIconGMX} alt="GMX Icon" style={{width: 15}} />
                 {order.type === INCREASE ? "Limit" : "Trigger"}
               </div>

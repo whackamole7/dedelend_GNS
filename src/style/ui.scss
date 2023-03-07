@@ -424,6 +424,10 @@ input[type="text"] {
 		}
 	}
 
+	&__btn {
+		width: 100%;
+	}
+
 	&.active &__content {
 		opacity: 1;
 		transform: rotateX(0);

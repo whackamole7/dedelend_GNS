@@ -35,8 +35,10 @@ import { errAlert, notifySuccess } from './../../../../components/utils/notifica
 import { ethers } from 'ethers';
 import { BigNumber } from 'ethers';
 import { getTokenBySymbol } from "../../config/Tokens";
-import { expandDecimals } from './../../lib/legacy';
+import { expandDecimals, MARKET } from './../../lib/legacy';
 import { GNS_FEES_MULTIPLIER } from './../../../../components/utils/constants';
+import SLTPModal from './../../../../components/UI/modal/SLTPModal';
+import { formatForContract } from "../../../../components/utils/math";
 
 const getOrdersForPosition = (account, position, orders, nativeTokenAddress) => {
   if (!orders || orders.length === 0) {
@@ -111,11 +113,68 @@ export default function PositionsList(props) {
 
   const hasPositions = Boolean(positions?.length || positionsGNS?.length || Object.keys(pendingPositionsGNS).length);
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [SLTPModalInfo, setSLTPModalInfo] = useState([]);
+
+
+  const renderSLTPModal = () => {
+    const [isTP, position, title, btnText] = SLTPModalInfo;
+    const onApply = (val) => {
+      setSLTP(isTP, val, position);
+    }
+    
+    return (
+      <SLTPModal
+        visible={modalVisible}
+        setVisible={setModalVisible}
+        title={title}
+        btnText={btnText}
+        onApply={onApply}
+        isTP={isTP}
+        position={position}
+      />
+    );
+  }
+  const openSLTPModal = (isTP, position) => {
+    const curVal = isTP ? position.tp : position.sl;
+    const orderName = isTP ? 'Take Profit' : 'Stop Loss';
+    const title = `${curVal ? 'Edit' : 'Set'} ${orderName}`;
+    const btnText = curVal ? 'Save changes' : title;
+
+		setSLTPModalInfo([
+			isTP, position, title, btnText
+		]);
+    setModalVisible(true);
+  }
+
+  
+  const setSLTP = (isTP, value, position) => {
+    const pairIndex = position.pairIndex;
+    const index = position.index;
+    const newValue = formatForContract(value, 10);
+    console.log(newValue);
+    
+    const contract = new ethers.Contract(GNS_Trading.address, GNS_Trading.abi, library.getSigner());
+    const method = isTP ? 'updateTp' : 'updateSl';
+
+    contract[method](pairIndex, index, newValue)
+      .then(tsc => {
+        console.log(tsc);
+      
+        tsc.wait()
+          .then(() => {
+            notifySuccess(`${isTP ? 'Take Profit' : 'Stop Loss'} update submitted!`, tsc.hash);
+            setModalVisible(false);
+          })
+      }, errAlert)
+  }
+
   const [positionToEditKey, setPositionToEditKey] = useState(undefined);
   const [positionToSellKey, setPositionToSellKey] = useState(undefined);
   const [positionToShare, setPositionToShare] = useState(null);
   const [isPositionEditorVisible, setIsPositionEditorVisible] = useState(undefined);
   const [isPositionSellerVisible, setIsPositionSellerVisible] = useState(undefined);
+  const [positionSellerTab, setPositionSellerTab] = useState(MARKET);
   const [collateralTokenAddress, setCollateralTokenAddress] = useState(undefined);
   const [isPositionShareModalOpen, setIsPositionShareModalOpen] = useState(false);
   const [ordersToaOpen, setOrdersToaOpen] = useState(false);
@@ -127,11 +186,13 @@ export default function PositionsList(props) {
     setIsPositionEditorVisible(true);
   };
 
-  const sellPosition = (position, setLoading) => {
+  const sellPosition = (position, setLoading, initTab) => {
     if (position.market === 'GMX') {
       setPositionToSellKey(position.key);
       setIsPositionSellerVisible(true);
+      setPositionSellerTab(initTab);
       setIsHigherSlippageAllowed(false);
+      setLoading(false);
     } else if (position.market === 'GNS') {
       const contract = new ethers.Contract(GNS_Trading.address, GNS_Trading.abi, library.getSigner());
 
@@ -150,13 +211,6 @@ export default function PositionsList(props) {
       });
     }
   };
-
-  const setStopLoss = (position) => {
-    
-  }
-  const setTakeProfit = (position) => {
-
-  }
   
   const onPositionClick = (position) => {
     helperToast.success(`${position.isLong ? "Long" : "Short"} ${position.indexToken.symbol} market selected`);
@@ -250,8 +304,10 @@ export default function PositionsList(props) {
           minExecutionFeeErrorMessage={minExecutionFeeErrorMessage}
           usdgSupply={usdgSupply}
           totalTokenWeights={totalTokenWeights}
+          initTab={positionSellerTab}
         />
       )}
+      {renderSLTPModal()}
       {hasPositions && !positionsLoading && (
         <div className="Exchange-list small">
           <div>
@@ -284,6 +340,7 @@ export default function PositionsList(props) {
 
               return (
                 <PositionsItem
+                  openSLTPModal={openSLTPModal}
                   key={position.key}
                   position={position}
                   onPositionClick={onPositionClick}
@@ -297,8 +354,7 @@ export default function PositionsList(props) {
                   borrowFeeUSD={borrowFeeUSD}
                   editPosition={editPosition}
                   sellPosition={sellPosition}
-                  setStopLoss={setStopLoss}
-                  setTakeProfit={setTakeProfit}
+                  setSLTP={setSLTP}
                   isLarge={false}
                 />
               );
@@ -315,7 +371,7 @@ export default function PositionsList(props) {
               const isLong = position.buy;
               position.isLong = isLong;
   
-              const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex);
+              const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex.toNumber());
               position.indexToken = getTokenBySymbol(chainId, tokenSymb);
               const tokenAddr = position.indexToken.address;
               const curPrice = infoTokens[tokenAddr].maxPrice;
@@ -387,6 +443,7 @@ export default function PositionsList(props) {
               const positionOrders = [];
               return (
                 <PositionsItem
+                  openSLTPModal={openSLTPModal}
                   key={key}
                   position={position}
                   onPositionClick={onPositionClick}
@@ -400,9 +457,8 @@ export default function PositionsList(props) {
                   // borrowFeeUSD={borrowFeeUSD}
                   editPosition={editPosition}
                   sellPosition={sellPosition}
-                  setStopLoss={setStopLoss}
-                  setTakeProfit={setTakeProfit}
-                  isLarge={true}
+                  setSLTP={setSLTP}
+                  isLarge={false}
                 />
               );
             })}
@@ -416,7 +472,7 @@ export default function PositionsList(props) {
               position.market = "GNS";
               const key = `${position.pairIndex}`;
 
-              const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex);
+              const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex.toNumber());
               
               position.indexToken = getTokenBySymbol(chainId, tokenSymb);
               const tokenAddr = position.indexToken.address;
@@ -433,6 +489,7 @@ export default function PositionsList(props) {
               const positionOrders = [];
               return (
                 <PositionsItem
+                  openSLTPModal={openSLTPModal}
                   key={key}
                   position={position}
                   onPositionClick={onPositionClick}
@@ -446,8 +503,7 @@ export default function PositionsList(props) {
                   // borrowFeeUSD={borrowFeeUSD}
                   editPosition={editPosition}
                   sellPosition={sellPosition}
-                  setStopLoss={setStopLoss}
-                  setTakeProfit={setTakeProfit}
+                  setSLTP={setSLTP}
                   isLarge={true}
                   isPending={true}
                 />
@@ -458,7 +514,7 @@ export default function PositionsList(props) {
       )}
       <table className="Exchange-list large App-box">
         <tbody>
-          {hasPositions && !positionsLoading && (
+          {hasPositions && (
             <tr className="Exchange-list-header">
               <th>
                 <Trans>Position</Trans>
@@ -523,6 +579,7 @@ export default function PositionsList(props) {
 
             return (
               <PositionsItem
+                openSLTPModal={openSLTPModal}
                 key={position.key}
                 position={position}
                 onPositionClick={onPositionClick}
@@ -536,8 +593,7 @@ export default function PositionsList(props) {
                 borrowFeeUSD={borrowFeeUSD}
                 editPosition={editPosition}
                 sellPosition={sellPosition}
-                setStopLoss={setStopLoss}
-                setTakeProfit={setTakeProfit}
+                setSLTP={setSLTP}
                 isLarge={true}
               />
             );
@@ -554,7 +610,7 @@ export default function PositionsList(props) {
             const isLong = position.buy;
             position.isLong = isLong;
 
-            const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex);
+            const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex.toNumber());
             position.indexToken = getTokenBySymbol(chainId, tokenSymb);
             const tokenAddr = position.indexToken.address;
             const curPrice = infoTokens[tokenAddr].maxPrice;
@@ -626,6 +682,7 @@ export default function PositionsList(props) {
             const positionOrders = [];
             return (
               <PositionsItem
+                openSLTPModal={openSLTPModal}
                 key={key}
                 position={position}
                 onPositionClick={onPositionClick}
@@ -639,8 +696,7 @@ export default function PositionsList(props) {
                 // borrowFeeUSD={borrowFeeUSD}
                 editPosition={editPosition}
                 sellPosition={sellPosition}
-                setStopLoss={setStopLoss}
-                setTakeProfit={setTakeProfit}
+                setSLTP={setSLTP}
                 isLarge={true}
               />
             );
@@ -655,7 +711,7 @@ export default function PositionsList(props) {
             position.market = "GNS";
             const key = `${position.pairIndex}`;
 
-            const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex);
+            const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex.toNumber());
             
             position.indexToken = getTokenBySymbol(chainId, tokenSymb);
             const tokenAddr = position.indexToken.address;
@@ -672,6 +728,7 @@ export default function PositionsList(props) {
             const positionOrders = [];
             return (
               <PositionsItem
+                openSLTPModal={openSLTPModal}
                 key={key}
                 position={position}
                 onPositionClick={onPositionClick}
@@ -685,8 +742,7 @@ export default function PositionsList(props) {
                 // borrowFeeUSD={borrowFeeUSD}
                 editPosition={editPosition}
                 sellPosition={sellPosition}
-                setStopLoss={setStopLoss}
-                setTakeProfit={setTakeProfit}
+                setSLTP={setSLTP}
                 isLarge={true}
                 isPending={true}
               />

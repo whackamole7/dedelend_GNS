@@ -1,23 +1,119 @@
-import React from 'react';
-import Modal from './../../../views/gmx-test/components/Modal/Modal';
+import React, { useState } from 'react';
+import { formatForContract } from '../../utils/math';
+import { convertInputNum } from '../../utils/sepThousands';
+import Modal from './Modal';
+import { formatAmount, formatAmountFree, USD_DECIMALS } from './../../../views/gmx-test/lib/legacy';
 
 const SLTPModal = (props) => {
 	const {
 		visible,
 		setVisible,
-		onClick,
+		isTP,
+		onApply,
 		title,
+		btnText,
+		position,
 	} = props;
+
+	const [value, setValue] = useState('');
+
+	const getError = () => {
+		if (!position) {
+			return btnText;
+		}
+
+		if (!value) {
+			return btnText;
+		}
+		
+		const isLong = position.isLong;
+		const price = Number(formatAmount(position.markPrice, 20, 0, 0));
+		const val = formatForContract(value, 10);
+
+		if (!isTP) {
+      if ((isLong && val > price) || (!isLong && val < price)) {
+        return `${isLong ? 'Long' : 'Short'} SL can't be ${isLong ? 'greater' : 'less'} than mark price.`;
+      }
+    }
+    if (isTP) {
+      if ((isLong && val < price) || (!isLong && val > price)) {
+        return `${isLong ? 'Long' : 'Short'} TP can't be ${isLong ? 'less' : 'greater'} than mark price.`;
+      }
+    }
+	}
+
+	const getBtnText = () => {
+		const error = getError();
+		if (error) {
+			return error;
+		}
+
+		return btnText;
+	}
+	const isBtnEnabled = () => {
+		const hasError = Boolean(getError());
+		
+		if (hasError) {
+			return false;
+		}
+
+		return true;
+	}
 
 	return (
 		<Modal
 			className="SLTP"
 			visible={visible}
 			setVisible={setVisible}
+			resetModal={() => setValue('')}
 		>
 			<h1 className="modal__title">{title}</h1>
 			<div className="modal__body">
+				<div className="Exchange-swap-section">
+					<div className="Exchange-swap-section-top">
+						<div className="muted">
+							<div className="Exchange-swap-usd">
+								Size
+							</div>
+						</div>
+						<div
+							className="muted align-right clickable"
+							onClick={() => {
+								setValue(formatAmountFree(position?.markPrice, USD_DECIMALS, 2));
+							}}
+						>
+							Mark: {formatAmount(position?.markPrice, USD_DECIMALS, 2, true)}
+						</div>
+					</div>
+					<div className="Exchange-swap-section-bottom">
+						<div>
+							<input
+								placeholder="0.0"
+								className="Exchange-swap-input"
+								value={value}
+								onChange={(e) => {
+									setValue(convertInputNum(e.target.value));
+								}}
+								onFocus={(e) => {
+									e.target.parentElement.parentElement.parentElement.classList.add('hlight');
+								}}
+								onBlur={(e) => {
+									e.target.parentElement.parentElement.parentElement.classList.remove('hlight');
+								}}
+							/>
+						</div>
+					</div>
+				</div>
 
+				<button 
+					className="SLTP__btn modal__btn btn btn_hlight"
+					onClick={() => {
+						onApply(value);
+					}}
+					disabled={!isBtnEnabled()}
+				>
+					{getBtnText()}
+				</button>
 			</div>
 		</Modal>
 	);

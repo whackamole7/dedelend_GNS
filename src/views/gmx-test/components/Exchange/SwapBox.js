@@ -104,8 +104,6 @@ import SLTPModal from './../../../../components/UI/modal/SLTPModal';
 import { signer } from './../../../../components/utils/providers';
 import { USDC } from '../../../../components/utils/contracts';
 import { marketsList } from "../../../../components/utils/constants";
-import NumberInput_v2 from "../../../../components/UI/input/NumberInput_v2";
-import { getSlTpFromPercentage } from './../../../../components/utils/utils';
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -489,26 +487,6 @@ export default function SwapBox(props) {
             markets={markets}
             setMarkets={setMarkets}
             liqs={liquidity}
-          />
-        );
-      case 'Stop-Loss':
-        return (
-          <SLTPModal
-            visible={modalVisible}
-            setVisible={setModalVisible}
-            position={position}
-            title={'Set Stop Loss'}
-            onClick={setStopLoss}
-          />
-        );
-      case 'Take-Profit':
-        return (
-          <SLTPModal
-            visible={modalVisible}
-            setVisible={setModalVisible}
-            position={position}
-            title={'Set Take Profit'}
-            onClick={setTakeProfit}
           />
         );
       default:
@@ -2062,16 +2040,13 @@ export default function SwapBox(props) {
     const typeOfOrder = isMarketOrder ? 0 : 1;
     const slippage = userSlippage * 10**10;
 
-    console.log(openPrice.toString());
-
     const takeProfit = (formatForContract(TPValue, 10)).toFixed(0);
     const stopLoss = (formatForContract(SLValue, 10)).toFixed(0);
       
     const fees = BigNumber.from(formatAmount(feesUsd, 12, 0, 0));
     
     const key = `${pairIndex}${roundLeverage}`;
-      
-    console.log(`Take Proft: ${takeProfit}\nStop Loss: ${stopLoss}`);
+    
     const contract = new ethers.Contract(GNS_Trading.address, GNS_Trading.abi, library.getSigner());
     contract.openTrade(
       [account, pairIndex, 0, 0, posSize, openPrice, isLong, roundLeverage, takeProfit, stopLoss],
@@ -2101,13 +2076,6 @@ export default function SwapBox(props) {
       setIsPendingConfirmation(false);
     });
   };
-
-  const setStopLoss = async (val) => {
-
-  }
-  const setTakeProfit = async (val) => {
-
-  }
 
   const leverageStorage = {
     GMX: {
