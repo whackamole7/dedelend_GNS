@@ -29,6 +29,9 @@ import StatsTooltipRow from "../StatsTooltip/StatsTooltipRow";
 import { GNS_PAIRS } from './../../lib/GNS_legacy';
 import { getTokenBySymbol } from "../../config/Tokens.js";
 import { expandDecimals } from './../../lib/legacy';
+import GNS_Trading from '../../abis/GNS/GNS_Trading.json';
+import { ethers } from 'ethers';
+import { errAlert, notifySuccess } from './../../../../components/utils/notifications';
 
 export default function OrdersList(props) {
   const {
@@ -56,15 +59,35 @@ export default function OrdersList(props) {
   const [editingOrder, setEditingOrder] = useState(null);
 
   const onCancelClick = useCallback(
-    (order) => {
-      handleCancelOrder(chainId, library, order, { pendingTxns, setPendingTxns });
+    (order, market = 'GMX') => {
+      if (market === 'GMX') {
+        handleCancelOrder(chainId, library, order, { pendingTxns, setPendingTxns });
+      }
+      if (market === 'GNS') {
+        const contract = new ethers.Contract(GNS_Trading.address, GNS_Trading.abi, library.getSigner());
+
+        contract.cancelOpenLimitOrder(order.pairIndex, order.index)
+          .then(tsc => {
+            console.log(tsc);
+      
+            tsc.wait()
+              .then(() => {
+                notifySuccess(`Limit order cancelled!`, tsc.hash);
+              })
+          }, errAlert)
+      }
     },
     [library, pendingTxns, setPendingTxns, chainId]
   );
 
   const onEditClick = useCallback(
-    (order) => {
-      setEditingOrder(order);
+    (order, market = 'GMX') => {
+      if (market === 'GMX') {
+        setEditingOrder(order);
+      }
+      if (market === 'GNS') {
+        console.log(order);
+      }
     },
     [setEditingOrder]
   );
@@ -85,11 +108,6 @@ export default function OrdersList(props) {
         <th>
           <div>
             <Trans>Order</Trans>
-          </div>
-        </th>
-        <th>
-          <div>
-            <Trans>Leverage</Trans>
           </div>
         </th>
         <th>
@@ -121,16 +139,16 @@ export default function OrdersList(props) {
   }, [orders, ordersGNS]);
 
   const renderActions = useCallback(
-    (order) => {
+    (order, market) => {
       return (
         <>
           <td>
-            <button className="Exchange-list-action" onClick={() => onEditClick(order)}>
+            <button className="Exchange-list-action" onClick={() => onEditClick(order, market)}>
               <Trans>Edit</Trans>
             </button>
           </td>
           <td>
-            <button className="Exchange-list-action" onClick={() => onCancelClick(order)}>
+            <button className="Exchange-list-action" onClick={() => onCancelClick(order, market)}>
               <Trans>Cancel</Trans>
             </button>
           </td>
@@ -199,7 +217,6 @@ export default function OrdersList(props) {
               />
             )}
           </td>
-          <td></td>
           <td className="nowrap">
             {triggerPricePrefix} {formatAmount(order.triggerPrice, USD_DECIMALS, 2, true)}
           </td>
@@ -248,6 +265,8 @@ export default function OrdersList(props) {
       const markPrice = infoTokens[indexToken.address].maxPrice;
       order.triggerPrice = expandDecimals(order.maxPrice ?? order.minPrice, 20);
       
+      order.positionSize = order.positionSize.mul(order.leverage)
+      
       const orderText = (
         <>
           {order.type === INCREASE ? "Increase" : "Decrease"} {indexTokenSymbol} {order.isLong ? "Long" : "Short"}
@@ -264,16 +283,13 @@ export default function OrdersList(props) {
           <td>
             {orderText}
           </td>
-          <td>
-            {formatAmount(order.leverage, 0, 0)}x
-          </td>
           <td className="nowrap">
             ${formatAmount(order.triggerPrice, USD_DECIMALS, 2, true)}
           </td>
           <td>
             ${formatAmount(markPrice, USD_DECIMALS, 2, true)}
           </td>
-          {!hideActions && renderActions(order)}
+          {!hideActions && renderActions(order, 'GNS')}
         </tr>
       );
     });
@@ -329,14 +345,6 @@ export default function OrdersList(props) {
             </div>
             <div className="App-card-row">
               <div className="label">
-                <Trans>Leverage</Trans>
-              </div>
-              <div className="icon-container">
-                {formatAmount(order.leverage, 0, 0)}x
-              </div>
-            </div>
-            <div className="App-card-row">
-              <div className="label">
                 <Trans>Price</Trans>
               </div>
               <div>
@@ -355,10 +363,10 @@ export default function OrdersList(props) {
               <>
                 <div className="App-card-divider"></div>
                 <div className="App-card-options">
-                  <button className="App-button-option App-card-option" onClick={() => onEditClick(order)}>
+                  <button className="App-button-option App-card-option" onClick={() => onEditClick(order, 'GNS')}>
                     <Trans>Edit</Trans>
                   </button>
-                  <button className="App-button-option App-card-option" onClick={() => onCancelClick(order)}>
+                  <button className="App-button-option App-card-option" onClick={() => onCancelClick(order, 'GNS')}>
                     <Trans>Cancel</Trans>
                   </button>
                 </div>

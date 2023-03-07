@@ -371,7 +371,7 @@ export default function PositionsList(props) {
               const isLong = position.buy;
               position.isLong = isLong;
   
-              const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex.toNumber());
+              const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex?.toNumber());
               position.indexToken = getTokenBySymbol(chainId, tokenSymb);
               const tokenAddr = position.indexToken.address;
               const curPrice = infoTokens[tokenAddr].maxPrice;
@@ -472,7 +472,7 @@ export default function PositionsList(props) {
               position.market = "GNS";
               const key = `${position.pairIndex}`;
 
-              const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex.toNumber());
+              const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex?.toNumber());
               
               position.indexToken = getTokenBySymbol(chainId, tokenSymb);
               const tokenAddr = position.indexToken.address;
@@ -610,7 +610,7 @@ export default function PositionsList(props) {
             const isLong = position.buy;
             position.isLong = isLong;
 
-            const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex.toNumber());
+            const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex?.toNumber());
             position.indexToken = getTokenBySymbol(chainId, tokenSymb);
             const tokenAddr = position.indexToken.address;
             const curPrice = infoTokens[tokenAddr].maxPrice;
@@ -711,7 +711,7 @@ export default function PositionsList(props) {
             position.market = "GNS";
             const key = `${position.pairIndex}`;
 
-            const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex.toNumber());
+            const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex?.toNumber());
             
             position.indexToken = getTokenBySymbol(chainId, tokenSymb);
             const tokenAddr = position.indexToken.address;
