@@ -35,6 +35,10 @@ const SLTPModal = (props) => {
 		const price = Number(formatAmount(position.markPrice, 20, 0, 0));
 		const val = formatForContract(value, 10);
 
+		if (val === 0) {
+			return;
+		}
+
 		if (!isTP) {
       if ((isLong && val > price) || (!isLong && val < price)) {
         return `${isLong ? 'Long' : 'Short'} SL can't be ${isLong ? 'greater' : 'less'} than mark price.`;
