@@ -293,20 +293,20 @@ export default function ExchangeTVChart(props) {
             order.isLong ? "Long" : "Short"
           }`;
           const color = "#3a3e5e";
-          lines.push(
+          /* lines.push(
             currentSeries.createPriceLine({
               price: parseFloat(formatAmount(order.triggerPrice, USD_DECIMALS, 2)),
               color,
               title: title.padEnd(PRICE_LINE_TEXT_WIDTH, " "),
             })
-          );
+          ); */
         });
       }
       if (positions && positions.length > 0) {
         const color = "#3a3e5e";
 
         positions.forEach((position) => {
-          lines.push(
+          /* lines.push(
             currentSeries.createPriceLine({
               price: parseFloat(formatAmount(position.averagePrice, USD_DECIMALS, 2)),
               color,
@@ -315,10 +315,10 @@ export default function ExchangeTVChart(props) {
                 " "
               ),
             })
-          );
+          ); */
 
           const liquidationPrice = getLiquidationPrice(position);
-          lines.push(
+          /* lines.push(
             currentSeries.createPriceLine({
               price: parseFloat(formatAmount(liquidationPrice, USD_DECIMALS, 2)),
               color,
@@ -327,7 +327,7 @@ export default function ExchangeTVChart(props) {
                 " "
               ),
             })
-          );
+          ); */
         });
       }
     }

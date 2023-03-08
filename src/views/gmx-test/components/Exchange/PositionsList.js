@@ -119,8 +119,8 @@ export default function PositionsList(props) {
 
   const renderSLTPModal = () => {
     const [isTP, position, title, btnText] = SLTPModalInfo;
-    const onApply = (val) => {
-      setSLTP(isTP, val, position);
+    const onApply = (val, setIsLoading) => {
+      setSLTP(isTP, val, position, setIsLoading);
     }
     
     return (
@@ -138,8 +138,8 @@ export default function PositionsList(props) {
   const openSLTPModal = (isTP, position) => {
     const curVal = isTP ? position.tp : position.sl;
     const orderName = isTP ? 'Take Profit' : 'Stop Loss';
-    const title = `${curVal ? 'Edit' : 'Set'} ${orderName}`;
-    const btnText = curVal ? 'Save changes' : title;
+    const title = `${!curVal?.eq(0) ? 'Edit' : 'Set'} ${orderName}`;
+    const btnText = !curVal?.eq(0) ? 'Save changes' : title;
 
 		setSLTPModalInfo([
 			isTP, position, title, btnText
@@ -148,11 +148,10 @@ export default function PositionsList(props) {
   }
 
   
-  const setSLTP = (isTP, value, position) => {
+  const setSLTP = (isTP, value, position, setIsLoading) => {
     const pairIndex = position.pairIndex;
     const index = position.index;
-    const newValue = formatForContract(value, 10);
-    console.log(newValue);
+    const newValue = value ? formatForContract(value, 10) : '0';
     
     const contract = new ethers.Contract(GNS_Trading.address, GNS_Trading.abi, library.getSigner());
     const method = isTP ? 'updateTp' : 'updateSl';
@@ -166,7 +165,7 @@ export default function PositionsList(props) {
             notifySuccess(`${isTP ? 'Take Profit' : 'Stop Loss'} update submitted!`, tsc.hash);
             setModalVisible(false);
           })
-      }, errAlert)
+      }, errAlert).finally(() => setIsLoading(false));
   }
 
   const [positionToEditKey, setPositionToEditKey] = useState(undefined);
@@ -360,7 +359,7 @@ export default function PositionsList(props) {
               );
             })}
             {positionsGNS?.map(pos => {
-              if (pos.trader === ADDRESS_ZERO) {
+              if (!pos.trader || pos.trader === ADDRESS_ZERO) {
                 return;
               }
               
@@ -371,7 +370,7 @@ export default function PositionsList(props) {
               const isLong = position.buy;
               position.isLong = isLong;
   
-              const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex?.toNumber());
+              const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === Number(position.pairIndex));
               position.indexToken = getTokenBySymbol(chainId, tokenSymb);
               const tokenAddr = position.indexToken.address;
               const curPrice = infoTokens[tokenAddr].maxPrice;
@@ -472,7 +471,7 @@ export default function PositionsList(props) {
               position.market = "GNS";
               const key = `${position.pairIndex}`;
 
-              const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex?.toNumber());
+              const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === Number(position.pairIndex));
               
               position.indexToken = getTokenBySymbol(chainId, tokenSymb);
               const tokenAddr = position.indexToken.address;
@@ -599,7 +598,7 @@ export default function PositionsList(props) {
             );
           })}
           {positionsGNS?.map(pos => {
-            if (pos.trader === ADDRESS_ZERO) {
+            if (!pos.trader || pos.trader === ADDRESS_ZERO) {
               return;
             }
             
@@ -610,7 +609,7 @@ export default function PositionsList(props) {
             const isLong = position.buy;
             position.isLong = isLong;
 
-            const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex?.toNumber());
+            const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === Number(position.pairIndex));
             position.indexToken = getTokenBySymbol(chainId, tokenSymb);
             const tokenAddr = position.indexToken.address;
             const curPrice = infoTokens[tokenAddr].maxPrice;
@@ -711,7 +710,7 @@ export default function PositionsList(props) {
             position.market = "GNS";
             const key = `${position.pairIndex}`;
 
-            const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === position.pairIndex?.toNumber());
+            const tokenSymb = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === Number(position.pairIndex));
             
             position.indexToken = getTokenBySymbol(chainId, tokenSymb);
             const tokenAddr = position.indexToken.address;

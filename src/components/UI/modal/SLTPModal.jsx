@@ -16,6 +16,7 @@ const SLTPModal = (props) => {
 	} = props;
 
 	const [value, setValue] = useState('');
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const getError = () => {
 		if (!position) {
@@ -23,6 +24,10 @@ const SLTPModal = (props) => {
 		}
 
 		if (!value) {
+			return btnText;
+		}
+
+		if (isSubmitting) {
 			return btnText;
 		}
 		
@@ -73,7 +78,7 @@ const SLTPModal = (props) => {
 					<div className="Exchange-swap-section-top">
 						<div className="muted">
 							<div className="Exchange-swap-usd">
-								Size
+								Price
 							</div>
 						</div>
 						<div
@@ -104,11 +109,16 @@ const SLTPModal = (props) => {
 						</div>
 					</div>
 				</div>
-
+				<div className="text-inline">
+					<p style={{fontSize: 15, lineHeight: 19.5/15}}>
+						To remove, set the value to 0
+					</p>
+				</div>
 				<button 
 					className="SLTP__btn modal__btn btn btn_hlight"
 					onClick={() => {
-						onApply(value);
+						setIsSubmitting(true);
+						onApply(value, setIsSubmitting);
 					}}
 					disabled={!isBtnEnabled()}
 				>

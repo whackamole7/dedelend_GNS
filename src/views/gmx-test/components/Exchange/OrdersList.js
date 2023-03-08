@@ -32,6 +32,7 @@ import { expandDecimals } from './../../lib/legacy';
 import GNS_Trading from '../../abis/GNS/GNS_Trading.json';
 import { ethers } from 'ethers';
 import { errAlert, notifySuccess } from './../../../../components/utils/notifications';
+import OrderEditorGNS from './OrderEditorGNS';
 
 export default function OrdersList(props) {
   const {
@@ -57,6 +58,8 @@ export default function OrdersList(props) {
   const marketIconGMX = require('../../../../img/icon-GMX.svg').default;  
 
   const [editingOrder, setEditingOrder] = useState(null);
+  const [editingOrderGNS, setEditingOrderGNS] = useState(null);
+  const [orderEditorGNSVisible, setOrderEditorGNSVisible] = useState();
 
   const onCancelClick = useCallback(
     (order, market = 'GMX') => {
@@ -86,7 +89,8 @@ export default function OrdersList(props) {
         setEditingOrder(order);
       }
       if (market === 'GNS') {
-        console.log(order);
+        setEditingOrderGNS(order);
+        setOrderEditorGNSVisible(true);
       }
     },
     [setEditingOrder]
@@ -187,9 +191,11 @@ export default function OrdersList(props) {
 
       return (
         <tr className="Exchange-list-item" key={`${order.isLong}-${order.type}-${order.index}`}>
-          <td className="Exchange-list-item-type icon-container">
-            <img src={marketIconGMX} alt="GMX Icon" style={{width: 15}} />
-            {order.type === INCREASE ? "Limit" : "Trigger"}
+          <td className="Exchange-list-item-type">
+            <div className="icon-container">
+              <img src={marketIconGMX} alt="GMX Icon" style={{width: 15}} />
+              {order.type === INCREASE ? "Limit" : "Trigger"}
+            </div>
           </td>
           <td>
             {order.type === DECREASE ? (
@@ -262,7 +268,10 @@ export default function OrdersList(props) {
       const indexTokenSymbol = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === order.pairIndex.toNumber());
       const indexToken = getTokenBySymbol(chainId, indexTokenSymbol);
 
+      const triggerPricePrefix = order.isLong ? TRIGGER_PREFIX_BELOW : TRIGGER_PREFIX_ABOVE;
+
       const markPrice = infoTokens[indexToken.address].maxPrice;
+      order.markPrice = markPrice;
       order.triggerPrice = expandDecimals(order.maxPrice ?? order.minPrice, 20);
       
       order.positionSize = order.positionSize.mul(order.leverage)
@@ -271,23 +280,27 @@ export default function OrdersList(props) {
         <>
           {order.type === INCREASE ? "Increase" : "Decrease"} {indexTokenSymbol} {order.isLong ? "Long" : "Short"}
           &nbsp;by ${formatAmount(order.positionSize, USDG_DECIMALS, 2, true)}
+          <div>{!order.tp?.eq(0) && `Take Profit: $${formatAmount(order.tp, 10, 2, 1)}`}</div>
+          <div>{!order.sl?.eq(0) && `Stop Loss: $${formatAmount(order.sl, 10, 2, 1)}`}</div>
         </>
       );
 
       return (
         <tr className="Exchange-list-item" key={`${order.buy}-${order.type}-${order.index}`}>
-          <td className="Exchange-list-item-type icon-container">
-            <img src={marketIconGNS} alt="GNS Icon" style={{width: 15}} />
-            {order.type === INCREASE ? "Limit" : "Trigger"}
-            </td>
+          <td className="Exchange-list-item-type">
+            <div className="icon-container">
+              <img src={marketIconGNS} alt="GNS Icon" style={{width: 15}} />
+              {order.type === INCREASE ? "Limit" : "Trigger"}
+            </div>
+          </td>
           <td>
             {orderText}
           </td>
           <td className="nowrap">
-            ${formatAmount(order.triggerPrice, USD_DECIMALS, 2, true)}
+            {triggerPricePrefix} {formatAmount(order.triggerPrice, USD_DECIMALS, 2, true)}
           </td>
           <td>
-            ${formatAmount(markPrice, USD_DECIMALS, 2, true)}
+            {formatAmount(markPrice, USD_DECIMALS, 2, true)}
           </td>
           {!hideActions && renderActions(order, 'GNS')}
         </tr>
@@ -317,6 +330,8 @@ export default function OrdersList(props) {
       const indexTokenSymbol = Object.keys(GNS_PAIRS).find(symb => GNS_PAIRS[symb] === order.pairIndex.toNumber());
       const indexToken = getTokenBySymbol(chainId, indexTokenSymbol);
 
+      const triggerPricePrefix = order.isLong ? TRIGGER_PREFIX_BELOW : TRIGGER_PREFIX_ABOVE;
+
       const markPrice = infoTokens[indexToken.address].maxPrice;
       order.triggerPrice = expandDecimals(order.maxPrice ?? order.minPrice, 20);
       
@@ -324,6 +339,8 @@ export default function OrdersList(props) {
         <>
           {order.type === INCREASE ? "Increase" : "Decrease"} {indexTokenSymbol} {order.isLong ? "Long" : "Short"}
           &nbsp;by ${formatAmount(order.positionSize, USDG_DECIMALS, 2, true)}
+          <div style={{color: '#384263'}}>{!order.tp?.eq(0) && `Take Profit: $${formatAmount(order.tp, 10, 2, 1)}`}</div>
+          <div style={{color: '#384263'}}>{!order.sl?.eq(0) && `Stop Loss: $${formatAmount(order.sl, 10, 2, 1)}`}</div>
         </>
       );
 
@@ -348,7 +365,7 @@ export default function OrdersList(props) {
                 <Trans>Price</Trans>
               </div>
               <div>
-                ${formatAmount(order.triggerPrice, USD_DECIMALS, 2, true)}
+                {triggerPricePrefix} {formatAmount(order.triggerPrice, USD_DECIMALS, 2, true)}
               </div>
             </div>
             <div className="App-card-row">
@@ -356,14 +373,14 @@ export default function OrdersList(props) {
                 <Trans>Mark Price</Trans>
               </div>
               <div>
-                ${formatAmount(markPrice, USD_DECIMALS, 2, true)}
+                {formatAmount(markPrice, USD_DECIMALS, 2, true)}
               </div>
             </div>
             {!hideActions && (
               <>
                 <div className="App-card-divider"></div>
                 <div className="App-card-options">
-                  <button className="App-button-option App-card-option" onClick={() => onEditClick(order, 'GNS')}>
+                  <button className="App-button-option App-card-option" onClick={() => onEditClick(order, 'GNS')} disabled={true}>
                     <Trans>Edit</Trans>
                   </button>
                   <button className="App-button-option App-card-option" onClick={() => onCancelClick(order, 'GNS')}>
@@ -504,6 +521,12 @@ export default function OrdersList(props) {
           savedShouldDisableValidationForTesting={savedShouldDisableValidationForTesting}
         />
       )}
+      <OrderEditorGNS
+        visible={orderEditorGNSVisible}
+        setVisible={setOrderEditorGNSVisible}
+        order={editingOrderGNS}
+        library={library}
+      />
     </React.Fragment>
   );
 }

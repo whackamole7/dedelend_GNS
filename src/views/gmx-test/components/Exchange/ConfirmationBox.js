@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useMemo } from "react";
+import React, { useCallback, useState, useMemo, useEffect } from "react";
 import "./ConfirmationBox.css";
 import {
   USD_DECIMALS,
@@ -38,6 +38,7 @@ import StatsTooltipRow from "../StatsTooltip/StatsTooltipRow";
 import SlippageInput from './../SlippageInput/SlippageInput';
 import NumberInput_v2 from './../../../../components/UI/input/NumberInput_v2';
 import { formatForContract } from "../../../../components/utils/math";
+import NumberInput_v3 from './../../../../components/UI/input/NumberInput_v3';
 
 const HIGH_SPREAD_THRESHOLD = expandDecimals(1, USD_DECIMALS).div(100); // 1%;
 
@@ -122,6 +123,11 @@ export default function ConfirmationBox(props) {
     setSLHasError,
     liquidity,
   } = props;
+
+  useEffect(() => {
+    setTPValue('');
+    setSLValue('');
+  }, []);
 
   
   const nativeTokenSymbol = getConstant(chainId, "nativeTokenSymbol");
@@ -736,16 +742,16 @@ export default function ConfirmationBox(props) {
           {
             market === 'GNS' &&
             <>
-              <NumberInput_v2 
+              <NumberInput_v3
                 value={TPValue}
                 setValue={setTPValue}
-                placeholder={"Set Take Profit"}
+                title={"Take Profit"}
                 hasError={TPHasError}
               />
-              <NumberInput_v2 
+              <NumberInput_v3 
                 value={SLValue}
                 setValue={setSLValue}
-                placeholder={"Set Stop Loss"}
+                title={"Stop Loss"}
                 hasError={SLHasError}
               />
             </>

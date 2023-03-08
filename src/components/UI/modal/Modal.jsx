@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import cx from 'classnames';
 
 const Modal = (props) => {
@@ -13,16 +13,18 @@ const Modal = (props) => {
 	
 	const classes = cx('modal', className, visible && 'active');
 
+	useEffect(() => {
+		if (resetModal) {
+			resetModal();
+		}
+	}, [visible]);
+
 	const closeModal = () => {
 		if (isObligatory) {
 			return;
 		}
 		
 		setVisible(false);
-		
-		if (resetModal) {
-			resetModal();
-		}
 	}
 	
 	return (

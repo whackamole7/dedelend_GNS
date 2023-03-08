@@ -1099,6 +1099,7 @@ export default function SwapBox(props) {
         if (leverage.gt(150 * BASIS_POINTS_DIVISOR)) {
           return [t`Max leverage: 150x`];
         } else if (leverage.lt(2 * BASIS_POINTS_DIVISOR)) {
+          console.log('11');
           return [t`Min leverage: 2x`];
         }
       }
@@ -1135,7 +1136,7 @@ export default function SwapBox(props) {
             return [t`Liquidity data not loaded`];
           }
           if (toTokenInfo.availableAmount && requiredAmount.gt(toTokenInfo.availableAmount)) {
-            return [t`Insufficient liquidity`];
+            // return [t`Insufficient liquidity`];
           }
         }
 
@@ -1144,9 +1145,10 @@ export default function SwapBox(props) {
           toTokenInfo.bufferAmount &&
           toTokenInfo.bufferAmount.gt(toTokenInfo.poolAmount.sub(swapAmount))
         ) {
-          return [t`Insufficient liquidity`, true, "BUFFER"];
+          // return [t`Insufficient liquidity`, true, "BUFFER"];
         }
 
+        
         if (
           fromUsdMin &&
           fromTokenInfo.maxUsdgAmount &&
@@ -1156,8 +1158,19 @@ export default function SwapBox(props) {
         ) {
           const usdgFromAmount = adjustForDecimals(fromUsdMin, USD_DECIMALS, USDG_DECIMALS);
           const nextUsdgAmount = fromTokenInfo.usdgAmount.add(usdgFromAmount);
-          if (nextUsdgAmount.gt(fromTokenInfo.maxUsdgAmount)) {
-            return [t`${fromTokenInfo.symbol} pool exceeded, try different token`, true, "MAX_USDG"];
+
+          if (suitableMarket?.name === 'GNS') {
+            if (
+              liquidity &&
+              liquidity[suitableMarket?.name].value &&
+              formatAmount(nextUsdgAmount, 30, 0) > liquidity[suitableMarket?.name].value
+            ) {
+              return [t`${fromTokenInfo.symbol} pool exceeded, try different token`, true, "MAX_USDG"];
+            }
+          } else if (suitableMarket?.name === 'GMX') {
+            if (nextUsdgAmount.gt(fromTokenInfo.maxUsdgAmount)) {
+              return [t`${fromTokenInfo.symbol} pool exceeded, try different token`, true, "MAX_USDG"];
+            }
           }
         }
       }
@@ -1183,8 +1196,6 @@ export default function SwapBox(props) {
           return [t`Max ${toTokenInfo.symbol} long exceeded`];
         }
       }
-
-      
     }
 
     if (isShort) {
@@ -1204,7 +1215,7 @@ export default function SwapBox(props) {
         );
         stableTokenAmount = nextToAmount;
         if (stableTokenAmount.gt(shortCollateralToken.availableAmount)) {
-          return [t`Insufficient liquidity, change "Profits In"`];
+          // return [t`Insufficient liquidity, change "Profits In"`];
         }
 
         if (
@@ -1213,7 +1224,7 @@ export default function SwapBox(props) {
           shortCollateralToken.bufferAmount.gt(shortCollateralToken.poolAmount.sub(stableTokenAmount))
         ) {
           // suggest swapping to collateralToken
-          return [t`Insufficient liquidity, change "Profits In"`, true, "BUFFER"];
+          // return [t`Insufficient liquidity, change "Profits In"`, true, "BUFFER"];
         }
 
         if (
@@ -1227,7 +1238,7 @@ export default function SwapBox(props) {
 
           
           if (nextUsdgAmount.gt(fromTokenInfo.maxUsdgAmount)) {
-            return [t`${fromTokenInfo.symbol} pool exceeded, try different token`, true, "MAX_USDG"];
+            // return [t`${fromTokenInfo.symbol} pool exceeded, try different token`, true, "MAX_USDG"];
           }
         }
       }
@@ -1271,7 +1282,7 @@ export default function SwapBox(props) {
 
       stableTokenAmount = stableTokenAmount.add(sizeTokens);
       if (stableTokenAmount.gt(shortCollateralToken.availableAmount)) {
-        return [t`Insufficient liquidity, change "Profits In"`];
+        // return [t`Insufficient liquidity, change "Profits In"`];
       }
     }
 
@@ -1940,7 +1951,7 @@ export default function SwapBox(props) {
       return;
     }
 
-    const [, modal, errorCode] = getError();
+    const [error, modal, errorCode] = getError();
 
     if (modal) {
       setModalError(errorCode);
@@ -2029,7 +2040,6 @@ export default function SwapBox(props) {
   const [TPHasError, setTPHasError] = useState(false);
   const [SLHasError, setSLHasError] = useState(false);
   
-  
   const openTrade = async (price) => {
     setIsSubmitting(true);
     
@@ -2040,9 +2050,11 @@ export default function SwapBox(props) {
     const typeOfOrder = isMarketOrder ? 0 : 1;
     const slippage = userSlippage * 10**10;
 
-    const takeProfit = (formatForContract(TPValue, 10)).toFixed(0);
-    const stopLoss = (formatForContract(SLValue, 10)).toFixed(0);
-      
+    const takeProfit = TPValue ? (formatForContract(TPValue, 10)).toFixed(0) : '0';
+    const stopLoss = SLValue ? (formatForContract(SLValue, 10)).toFixed(0) : '0';
+
+    console.log(takeProfit, stopLoss);
+    
     const fees = BigNumber.from(formatAmount(feesUsd, 12, 0, 0));
     
     const key = `${pairIndex}${roundLeverage}`;
@@ -2055,13 +2067,15 @@ export default function SwapBox(props) {
       slippage,
       account
     ).then(tsc => {
-      pendingPositionsGNS[key] = {
-        pairIndex,
-        isLong,
-        leverage,
-        positionSizeDai: posSize.sub(fees),
-      };
-      setPendingPositionsGNS(pendingPositionsGNS);
+      if (isMarketOrder) {
+        pendingPositionsGNS[key] = {
+          pairIndex,
+          isLong,
+          leverage,
+          positionSizeDai: posSize.sub(fees),
+        };
+        setPendingPositionsGNS(pendingPositionsGNS);
+      }
       
       setIsConfirming(false);
       console.log(tsc);
@@ -2074,6 +2088,8 @@ export default function SwapBox(props) {
     .finally(() => {
       setIsSubmitting(false);
       setIsPendingConfirmation(false);
+      setTPValue('');
+      setSLValue('');
     });
   };
 

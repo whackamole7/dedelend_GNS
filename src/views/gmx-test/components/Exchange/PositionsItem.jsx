@@ -183,7 +183,7 @@ const PositionsItem = (props) => {
 					<td onClick={() => {
 						// onPositionClick(position)
 						return;
-					}}>
+					}} style={{width: 135}}>
 						{`$${formatAmount(position.markPrice, USD_DECIMALS, 2, true)}`}
 					</td>
 					<td className="" onClick={() => {
@@ -223,14 +223,14 @@ const PositionsItem = (props) => {
 						}
 						{position.market === 'GMX' && (triggerPricesGMX.SL 
 							? ('$' + formatAmount(triggerPricesGMX.SL, USD_DECIMALS, 2, true))
-							: '—')
+							: '')
 						}
 						<button
 							className="Exchange-list-action"
 							onClick={() => openOrderModal(position.market, false, position)}
-							disabled={!position.size}
+							disabled={!position.size || isPending}
 						>
-							{position.sl?.eq(0)
+							{((!position.sl || position.sl?.eq(0)) && !triggerPricesGMX.SL)
 								? 'Set SL'
 								: <img src={icon_edit} alt="Edit Stop Loss button" />}
 						</button>
@@ -244,14 +244,14 @@ const PositionsItem = (props) => {
 						}
 						{position.market === 'GMX' && (triggerPricesGMX.TP 
 							? ('$' + formatAmount(triggerPricesGMX.TP, USD_DECIMALS, 2, true))
-							: '—')
+							: '')
 						}
 						<button
 							className="Exchange-list-action"
 							onClick={() => openOrderModal(position.market, true, position)}
-							disabled={!position.size}
+							disabled={!position.size || isPending}
 						>
-							{position.tp?.eq(0)
+							{((!position.tp || position.tp?.eq(0)) && !triggerPricesGMX.TP)
 								? 'Set TP'
 								: <img src={icon_edit} alt="Edit Take Profit button" />}
 						</button>
@@ -358,15 +358,15 @@ const PositionsItem = (props) => {
 							}
 							{position.market === 'GMX' && (triggerPricesGMX.SL 
 								? ('$' + formatAmount(triggerPricesGMX.SL, USD_DECIMALS, 2, true))
-								: '—')
+								: '')
 							}
 						</div>
 						<button
 							className="Exchange-list-action"
 							onClick={() => openOrderModal(position.market, false, position)}
-							disabled={!position.size}
+							disabled={!position.size || isPending}
 						>
-							{position.sl?.eq(0)
+							{((!position.sl || position.sl?.eq(0)) && !triggerPricesGMX.SL)
 								? 'Set SL'
 								: <img src={icon_edit} alt="Edit Stop Loss button" />}
 						</button>
@@ -384,15 +384,15 @@ const PositionsItem = (props) => {
 							}
 							{position.market === 'GMX' && (triggerPricesGMX.TP 
 								? ('$' + formatAmount(triggerPricesGMX.TP, USD_DECIMALS, 2, true))
-								: '—')
+								: '')
 							}
 						</div>
 						<button
 							className="Exchange-list-action"
 							onClick={() => openOrderModal(position.market, true, position)}
-							disabled={!position.size}
+							disabled={!position.size || isPending}
 						>
-							{position.tp?.eq(0)
+							{((!position.tp || position.tp?.eq(0)) && !triggerPricesGMX.TP)
 								? 'Set TP'
 								: <img src={icon_edit} alt="Edit Take Profit button" />}
 						</button>

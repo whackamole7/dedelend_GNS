@@ -771,7 +771,7 @@ export const Exchange = forwardRef((props, ref) => {
   const [orders] = useAccountOrders(flagOrdersEnabled, account);
   
   const { data: ordersGNSData, error: ordersGNSDataError } = useSWR(
-    active && [active, chainId, GNS_Storage.address, "getOrdersGNS", account],
+    active && [active, chainId, GNS_Storage.address, "getOrders", "getOrdersGNS", account],
     async () => {
       const orders = [];
       let order;
@@ -799,7 +799,7 @@ export const Exchange = forwardRef((props, ref) => {
   
   const [ordersGNS, setOrdersGNS] = useState([]);
   useEffect(() => {
-    if (!ordersGNSData || !ordersGNSData.length) {
+    if (!ordersGNSData) {
       return;
     }
     
@@ -879,11 +879,14 @@ export const Exchange = forwardRef((props, ref) => {
       });
   };
 
+  const posLength = positions?.length + positionsGNS?.length;
+  const ordersLength = orders?.length + ordersGNS?.length;
+
   const LIST_SECTIONS = ["Positions", flagOrdersEnabled ? "Orders" : undefined, "Trades"].filter(Boolean);
   let [listSection, setListSection] = useLocalStorageByChainId(chainId, "List-section-v2", LIST_SECTIONS[0]);
   const LIST_SECTIONS_LABELS = {
-    Orders: orders.length ? `Orders (${orders.length})` : undefined,
-    Positions: positions.length ? `Positions (${positions.length})` : undefined,
+    Orders: ordersLength ? `Orders (${ordersLength})` : undefined,
+    Positions: posLength ? `Positions (${posLength})` : undefined,
   };
   if (!LIST_SECTIONS.includes(listSection)) {
     listSection = LIST_SECTIONS[0];
