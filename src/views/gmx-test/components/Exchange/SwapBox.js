@@ -480,7 +480,7 @@ export default function SwapBox(props) {
   const renderModal = (position) => {
     switch(modal) {
       case 'Choose-Market':
-        return ( markets.length &&
+        return (
           <ChooseMarketModal
             visible={modalVisible}
             setVisible={setModalVisible}
@@ -489,7 +489,8 @@ export default function SwapBox(props) {
             setMarkets={setMarkets}
             liqs={liquidity}
           />
-        );
+        )
+          
       default:
         return (
           <></>
@@ -524,8 +525,6 @@ export default function SwapBox(props) {
   const onMarketSelect = (marketName) => {
     setSuitableMarket(marketsList.find(market => market.name === marketName));
   }
-
-  
 
   const fromBalance = fromTokenInfo ? fromTokenInfo.balance : bigNumberify(0);
   const toBalance = toTokenInfo ? toTokenInfo.balance : bigNumberify(0);

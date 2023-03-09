@@ -22,7 +22,7 @@ const ChooseMarketModal = (props) => {
 			setVisible={setVisible}
 			resetModal={() => {
 				if (draftMarkets.length) {
-					setMarkets(draftMarkets);
+					setMarkets(draftMarkets.slice());
 				} else {
 					setMarkets(marketsList.slice());
 				}
@@ -86,7 +86,7 @@ const ChooseMarketModal = (props) => {
 				className="ChooseMarket__btn btn btn_hlight"
 				onClick={() => {
 					if (draftMarkets.length) {
-						setMarkets(draftMarkets);
+						setMarkets(draftMarkets.slice());
 					} else {
 						setMarkets(marketsList.slice());
 					}
