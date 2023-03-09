@@ -836,6 +836,10 @@
     cursor: pointer;
     padding: 13px 24.5px;
     transition: all .2s ease;
+
+    &[disabled] {
+      color: $lgrey;
+    }
   }
   a.App-cta.hlight:enabled,
   button.App-cta.hlight:enabled {

@@ -239,9 +239,13 @@ export default function ConfirmationBox(props) {
   
         const borderTakeProfit = Number(getSlTpFromPercentage(isLong, true, 900, price / 10**10, leverage / 10**4));
         if (isLong ? takeProfit > borderTakeProfit : takeProfit < borderTakeProfit) {
+          setTPHasError(true);
           return `${isLong ? 'Max' : 'Min'} Take Profit price: ${formatAmount(borderTakeProfit, 10, 2, true)}`;
+        } else {
+          setTPHasError(false);
         }
       } else {
+        setTPHasError(false);
         return `Take Profit is required`;
       }
     }

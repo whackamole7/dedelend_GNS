@@ -358,6 +358,12 @@ export default function SwapBox(props) {
       fetcher: fetcher(library, Token),
     }
   );
+  const { data: tokenAllowanceGNS } = useSWR(
+    active && [active, chainId, tokenAllowanceAddress, "allowance", account, GNS_Storage.address],
+    {
+      fetcher: fetcher(library, Token),
+    }
+  );
 
   
   const { data: hasOutdatedUi } = Api.useHasOutdatedUi();
@@ -365,8 +371,6 @@ export default function SwapBox(props) {
   const fromToken = getToken(chainId, fromTokenAddress);
   const toToken = getToken(chainId, toTokenAddress);
   const shortCollateralToken = getTokenInfo(infoTokens, shortCollateralAddress);
-
-  
 
   const fromTokenInfo = getTokenInfo(infoTokens, fromTokenAddress);
   const toTokenInfo = getTokenInfo(infoTokens, toTokenAddress);
@@ -537,11 +541,19 @@ export default function SwapBox(props) {
   const isPotentialWrap = (fromToken.isNative && toToken.isWrapped) || (fromToken.isWrapped && toToken.isNative);
   const isWrapOrUnwrap = isSwap && isPotentialWrap;
   const needApproval =
-    fromTokenAddress !== AddressZero &&
-    tokenAllowance &&
-    fromAmount &&
-    fromAmount.gt(tokenAllowance) &&
-    !isWrapOrUnwrap;
+    suitableMarket?.name === 'GMX' ?
+      (fromTokenAddress !== AddressZero &&
+      tokenAllowance &&
+      fromAmount &&
+      fromAmount.gt(tokenAllowance) &&
+      !isWrapOrUnwrap)
+    : (suitableMarket?.name === 'GNS' &&
+        (fromTokenAddress !== AddressZero &&
+          tokenAllowanceGNS &&
+          fromAmount &&
+          fromAmount.gt(tokenAllowanceGNS) &&
+          !isWrapOrUnwrap));
+
   
   const prevFromTokenAddress = usePrevious(fromTokenAddress);
   const prevNeedApproval = usePrevious(needApproval);
@@ -1104,7 +1116,6 @@ export default function SwapBox(props) {
         if (leverage.gt(150 * BASIS_POINTS_DIVISOR)) {
           return [t`Max leverage: 150x`];
         } else if (leverage.lt(2 * BASIS_POINTS_DIVISOR)) {
-          console.log('11');
           return [t`Min leverage: 2x`];
         }
       }
@@ -1911,11 +1922,15 @@ export default function SwapBox(props) {
 
 
   function approveFromToken() {
+    const address = suitableMarket?.name === 'GMX'
+      ? routerAddress
+      : GNS_Storage.address;
+
     approveTokens({
       setIsApproving,
       library,
       tokenAddress: fromToken.address,
-      spender: routerAddress,
+      spender: address,
       chainId: chainId,
       onApproveSubmitted: () => {
         setIsWaitingForApproval(true);
@@ -1938,7 +1953,7 @@ export default function SwapBox(props) {
       return;
     }
 
-    if (needPositionRouterApproval) {
+    if (needPositionRouterApproval && suitableMarket?.name === 'GMX') {
       approvePositionRouter({
         sentMsg: t`Enable leverage sent.`,
         failMsg: t`Enable leverage failed.`,
@@ -1951,7 +1966,7 @@ export default function SwapBox(props) {
       return;
     }
 
-    if (needOrderBookApproval) {
+    if (needOrderBookApproval && suitableMarket?.name === 'GMX') {
       setOrdersToaOpen(true);
       return;
     }
@@ -2057,8 +2072,6 @@ export default function SwapBox(props) {
 
     const takeProfit = TPValue ? (formatForContract(TPValue, 10)).toFixed(0) : '0';
     const stopLoss = SLValue ? (formatForContract(SLValue, 10)).toFixed(0) : '0';
-
-    console.log(takeProfit, stopLoss);
     
     const fees = BigNumber.from(formatAmount(feesUsd, 12, 0, 0));
     
