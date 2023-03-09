@@ -6,21 +6,21 @@ export const getSlTpFromPercentage = (isLong, isTP, percentage, openPriceNum, le
 		return 0;
 	}
 
-	const feesDelta = formatAmount(fees, 30, 30, 0) / leverage;
-	const openPriceWithFees = isLong
-		? openPriceNum + feesDelta
-		: openPriceNum - feesDelta;
+	// const feesDelta = formatAmount(fees, 30, 30, 0) / leverage;
+	// const openPriceWithFees = isLong
+	// 	? openPriceNum + feesDelta
+	// 	: openPriceNum - feesDelta;
 	
 	if ((isTP && isLong) || (!isTP && !isLong)) {
 		return (
 			(
-				openPriceWithFees + (0.01 * openPriceWithFees * (percentage / leverage))
+				openPriceNum + (0.01 * openPriceNum * (percentage / leverage))
 			) * 10**10
 		).toFixed(0);
 	} else {
 		return (
 			(
-				openPriceWithFees - (0.01 * openPriceWithFees * (percentage / leverage))
+				openPriceNum - (0.01 * openPriceNum * (percentage / leverage))
 			) * 10**10
 		).toFixed(0);
 	}

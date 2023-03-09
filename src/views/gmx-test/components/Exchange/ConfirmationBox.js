@@ -39,6 +39,7 @@ import SlippageInput from './../SlippageInput/SlippageInput';
 import NumberInput_v2 from './../../../../components/UI/input/NumberInput_v2';
 import { formatForContract } from "../../../../components/utils/math";
 import NumberInput_v3 from './../../../../components/UI/input/NumberInput_v3';
+import { getSlTpFromPercentage } from './../../../../components/utils/utils';
 
 const HIGH_SPREAD_THRESHOLD = expandDecimals(1, USD_DECIMALS).div(100); // 1%;
 
@@ -217,25 +218,32 @@ export default function ConfirmationBox(props) {
   const stopLoss = Number(formatForContract(SLValue, 10).toFixed(0));
   const price = Number(formatAmount(isMarketOrder ? toTokenInfo.maxPrice : triggerPriceUsd, 20, 0, 0));
   const getError = () => {
-    if (stopLoss) {
-      if ((isLong && stopLoss > price) || (!isLong && stopLoss < price)) {
-        setSLHasError(true);
-        return `${isLong ? 'Long' : 'Short'} SL can't be ${isLong ? 'greater' : 'less'} than entry price.`;
+    if (market === 'GNS') {
+      if (stopLoss) {
+        if ((isLong && stopLoss > price) || (!isLong && stopLoss < price)) {
+          setSLHasError(true);
+          return `${isLong ? 'Long' : 'Short'} SL can't be ${isLong ? 'greater' : 'less'} than entry price.`;
+        } else {
+          setSLHasError(false);
+        }
       } else {
         setSLHasError(false);
       }
-    } else {
-      setSLHasError(false);
-    }
-    if (takeProfit) {
-      if ((isLong && takeProfit < price) || (!isLong && takeProfit > price)) {
-        setTPHasError(true);
-        return `${isLong ? 'Long' : 'Short'} TP can't be ${isLong ? 'less' : 'greater'} than entry price.`;
+      if (takeProfit) {
+        if ((isLong && takeProfit < price) || (!isLong && takeProfit > price)) {
+          setTPHasError(true);
+          return `${isLong ? 'Long' : 'Short'} TP can't be ${isLong ? 'less' : 'greater'} than entry price.`;
+        } else {
+          setTPHasError(false);
+        }
+  
+        const borderTakeProfit = Number(getSlTpFromPercentage(isLong, true, 900, price / 10**10, leverage / 10**4));
+        if (isLong ? takeProfit > borderTakeProfit : takeProfit < borderTakeProfit) {
+          return `${isLong ? 'Max' : 'Min'} Take Profit price: ${formatAmount(borderTakeProfit, 10, 2, true)}`;
+        }
       } else {
-        setTPHasError(false);
+        return `Take Profit is required`;
       }
-    } else {
-      return `Take Profit is required`;
     }
     
     if (!isSwap && hasExistingPosition && !isMarketOrder) {
