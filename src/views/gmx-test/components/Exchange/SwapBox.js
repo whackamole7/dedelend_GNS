@@ -465,11 +465,7 @@ export default function SwapBox(props) {
     setLiquidity(liquidityData);
   }, [liquidityData]);
 
-  const [markets, setMarkets] = useLocalStorageByChainId(
-    chainId,
-    "Markets-Chosen",
-    marketsList.slice()
-  );
+  const [markets, setMarkets] = useState(marketsList.slice());
   
   
   // Modal functionality
@@ -508,7 +504,6 @@ export default function SwapBox(props) {
       setSuitableMarket(null);
       return;
     }
-
     setSuitableMarket(markets.reduce((result, market) => {
       if (!liquidity) {
         return market;
