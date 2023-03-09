@@ -24,7 +24,7 @@ const ChooseMarketModal = (props) => {
 				if (draftMarkets.length) {
 					setMarkets(draftMarkets);
 				} else {
-					setMarkets(marketsList);
+					setMarkets(marketsList.slice());
 				}
 			}}
 		>
@@ -88,7 +88,7 @@ const ChooseMarketModal = (props) => {
 					if (draftMarkets.length) {
 						setMarkets(draftMarkets);
 					} else {
-						setMarkets(marketsList);
+						setMarkets(marketsList.slice());
 					}
 					setVisible(false);
 				}}
