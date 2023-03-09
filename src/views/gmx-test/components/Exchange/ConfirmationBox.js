@@ -235,7 +235,7 @@ export default function ConfirmationBox(props) {
         setTPHasError(false);
       }
     } else {
-      setTPHasError(false);
+      return `Take Profit is required`;
     }
     
     if (!isSwap && hasExistingPosition && !isMarketOrder) {

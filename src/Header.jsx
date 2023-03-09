@@ -205,10 +205,6 @@ const Header = (props) => {
 			name: 'Unified Trading Terminal',
 			to: '/terminal',
 		},
-		{
-			name: 'Earn',
-			to: '/earn',
-		},
 	]
 	headerLinks.find(link => {
 		link.isActive = loc.pathname === link.to;

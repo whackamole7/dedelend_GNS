@@ -5,7 +5,6 @@ import { convertInputNum } from '../../utils/sepThousands';
 const NumberInput_v3 = (props) => {
 	const {
 		title,
-		hasDisplayValue,
 		displayValueTitle,
 		displayValue,
 		value,
@@ -25,14 +24,14 @@ const NumberInput_v3 = (props) => {
 						{title}
 					</div>
 				</div>
-				{hasDisplayValue && (
+				{displayValue && (
 					<div
 						className="muted align-right clickable"
 						onClick={() => {
 							setValue(displayValue);
 						}}
 					>
-						{displayValueTitle} {displayValue}
+						{displayValueTitle}: {displayValue}
 					</div>
 				)}
 			</div>

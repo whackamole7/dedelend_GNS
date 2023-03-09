@@ -33,10 +33,6 @@ const AppRouter = ({ walletAddress, setWalletAddress, setRegisterVisible, accoun
 	
 	return (
 		<Routes>
-			{/* <Route
-				path="/options"
-				element={<BorrowMarket walletAddress={walletAddress} setWalletAddress={setWalletAddress} />} 
-			/> */}
 			<Route path="/terminal" element={
 				<GMXInterface
 					connectWallet={() => {
@@ -45,18 +41,6 @@ const AppRouter = ({ walletAddress, setWalletAddress, setRegisterVisible, accoun
 					walletAddress={walletAddress} 
 					setRegisterVisible={setRegisterVisible} />
 			} />
-			<Route
-				path="/earn"
-				element={<SupplyMarket walletAddress={walletAddress} setWalletAddress={setWalletAddress} supplyStep={supplyStep} setSupplyStep={setSupplyStep} />} 
-			/>
-			<Route
-				path="/account"
-				element={
-					<MarginAccount
-						account={account}
-					/>
-				}
-			/>
 			<Route
 				path="*"
 				element={<Navigate to={HOMEPAGE_HREF} replace />}

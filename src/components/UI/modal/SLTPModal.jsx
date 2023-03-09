@@ -3,6 +3,7 @@ import { formatForContract } from '../../utils/math';
 import { convertInputNum } from '../../utils/sepThousands';
 import Modal from './Modal';
 import { formatAmount, formatAmountFree, USD_DECIMALS } from './../../../views/gmx-test/lib/legacy';
+import NumberInput_v3 from './../input/NumberInput_v3';
 
 const SLTPModal = (props) => {
 	const {
@@ -78,41 +79,13 @@ const SLTPModal = (props) => {
 		>
 			<h1 className="modal__title">{title}</h1>
 			<div className="modal__body">
-				<div className="Exchange-swap-section">
-					<div className="Exchange-swap-section-top">
-						<div className="muted">
-							<div className="Exchange-swap-usd">
-								Price
-							</div>
-						</div>
-						<div
-							className="muted align-right clickable"
-							onClick={() => {
-								setValue(formatAmountFree(position?.markPrice, USD_DECIMALS, 2));
-							}}
-						>
-							Mark: {formatAmount(position?.markPrice, USD_DECIMALS, 2, true)}
-						</div>
-					</div>
-					<div className="Exchange-swap-section-bottom">
-						<div>
-							<input
-								placeholder="0.0"
-								className="Exchange-swap-input"
-								value={value}
-								onChange={(e) => {
-									setValue(convertInputNum(e.target.value));
-								}}
-								onFocus={(e) => {
-									e.target.parentElement.parentElement.parentElement.classList.add('hlight');
-								}}
-								onBlur={(e) => {
-									e.target.parentElement.parentElement.parentElement.classList.remove('hlight');
-								}}
-							/>
-						</div>
-					</div>
-				</div>
+				<NumberInput_v3
+					title='Price'
+					value={value}
+					setValue={setValue}
+					displayValue={formatAmount(position?.markPrice, USD_DECIMALS, 2, true)}
+					displayValueTitle={'Mark'}
+				/>
 				<div className="text-inline">
 					<p style={{fontSize: 15, lineHeight: 19.5/15}}>
 						To remove, set the value to 0
