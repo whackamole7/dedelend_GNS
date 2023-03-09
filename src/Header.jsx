@@ -205,6 +205,11 @@ const Header = (props) => {
 			name: 'Unified Trading Terminal',
 			to: '/terminal',
 		},
+		{
+			name: 'Borrow USDC',
+			to: 'https://borrow.dedelend.co/',
+			isExternal: true,
+		},
 	]
 	headerLinks.find(link => {
 		link.isActive = loc.pathname === link.to;
