@@ -220,7 +220,7 @@ export default function ConfirmationBox(props) {
   const getError = () => {
     if (market === 'GNS') {
       if (stopLoss) {
-        if ((isLong && stopLoss > price) || (!isLong && stopLoss < price)) {
+        if ((isLong && stopLoss >= price) || (!isLong && stopLoss <= price)) {
           setSLHasError(true);
           return `${isLong ? 'Long' : 'Short'} SL can't be ${isLong ? 'greater' : 'less'} than entry price.`;
         } else {
@@ -230,7 +230,7 @@ export default function ConfirmationBox(props) {
         setSLHasError(false);
       }
       if (takeProfit) {
-        if ((isLong && takeProfit < price) || (!isLong && takeProfit > price)) {
+        if ((isLong && takeProfit <= price) || (!isLong && takeProfit >= price)) {
           setTPHasError(true);
           return `${isLong ? 'Long' : 'Short'} TP can't be ${isLong ? 'less' : 'greater'} than entry price.`;
         } else {

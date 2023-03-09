@@ -1362,7 +1362,7 @@ export default function SwapBox(props) {
     if (isPositionRouterApproving) {
       return false;
     }
-    if (isApproving) {
+    if (isApproving || isPluginApproving) {
       return false;
     }
     if (isSubmitting) {
@@ -1414,7 +1414,7 @@ export default function SwapBox(props) {
     if (isPluginApproving) {
       return t`Enabling Orders...`;
     }
-    if (needOrderBookApproval) {
+    if (needOrderBookApproval && suitableMarket?.name === 'GMX') {
       return t`Enable Orders`;
     }
     
@@ -1967,7 +1967,7 @@ export default function SwapBox(props) {
     }
 
     if (needOrderBookApproval && suitableMarket?.name === 'GMX') {
-      setOrdersToaOpen(true);
+      approveOrderBook();
       return;
     }
 
