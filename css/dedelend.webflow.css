@@ -3524,6 +3524,9 @@
     border-radius: 0.3vw;
     font-size: 0.9vw;
   }
+  .botton-first-screen:hover {
+    width: 13vw;
+  }
 
   .logo-ddl {
     width: 5.4vw;
