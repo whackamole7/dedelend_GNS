@@ -104,6 +104,7 @@ import SLTPModal from './../../../../components/UI/modal/SLTPModal';
 import { signer } from './../../../../components/utils/providers';
 import { USDC } from '../../../../components/utils/contracts';
 import { marketsList } from "../../../../components/utils/constants";
+import Selector from './../../../../components/UI/Selector/Selector';
 
 const SWAP_ICONS = {
   [LONG]: longImg,
@@ -513,13 +514,17 @@ export default function SwapBox(props) {
       }
       return market;
     }))
-  });
+  }, [markets]);
 
   useEffect(() => {
     if (suitableMarket?.name === 'GNS') {
       setFromTokenAddress(isLong ? LONG : SHORT, getTokenBySymbol(chainId, 'DAI').address);
     }
   }, [suitableMarket]);
+
+  const onMarketSelect = (marketName) => {
+    setSuitableMarket(marketsList.find(market => market.name === marketName));
+  }
 
   
 
@@ -2471,15 +2476,12 @@ export default function SwapBox(props) {
                   }}
                 />
               </div>
-              <div className="align-right icon-container">
-                <img
-                  src={
-                    suitableMarket &&
-                      require(`../../../../img/icon-${suitableMarket?.name}.svg`).default
-                  }
-                  alt={`${suitableMarket?.name} icon`}
+              <div className="align-right">
+                <Selector
+                  items={marketsList.map(market => market.name)}
+                  chosenItem={suitableMarket?.name}
+                  onSelect={onMarketSelect}
                 />
-                {suitableMarket?.name}
               </div>
             </div>
             <div className="Exchange-info-row">

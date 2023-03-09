@@ -1,0 +1,51 @@
+@import '../../../style/vars.scss';
+
+.Selector {
+	position: relative;
+
+	&__chosen-item {
+		display: flex;
+		column-gap: 2px;
+		align-items: center;
+
+		transition: color .2s ease;
+		&:hover, &:focus-visible {
+			color: $lblue;
+		}
+		
+		.icon-down {
+			position: relative;
+			bottom: 2px;
+			transition: transform .2s ease;
+		}
+	}
+	
+	&__items {
+		display: none;
+		position: absolute;
+		right: 0;
+		top: calc(100% + 10px);
+		z-index: 80;
+
+		box-shadow: 3px 0 20px rgba(6,13,33,0.5);
+	}
+
+	&__item {
+		background-color: $blue-3;
+		border: $border;
+		border-radius: 5px;
+		padding: 9px 13px;
+
+		transition: color .2s ease;
+		&:hover, &:focus-visible {
+			color: $white;
+		}
+	}
+	
+	&.open &__items {
+		display: block;
+	}
+	&.open &__chosen-item .icon-down {
+		transform: rotate(180deg);
+	}
+}
