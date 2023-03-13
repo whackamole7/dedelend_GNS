@@ -1,0 +1,16 @@
+.edit-btn {
+	margin-left: 3px;
+}
+
+.Exchange-list-info-label, .App-card {
+	.market-logo {
+		width: 15px;
+		margin-right: 5px;
+		transform: translateY(10%);
+	}
+}
+
+.GMX-Interface .App-card-row.App-card-row_edit-btn {
+	grid-template-columns: 1fr auto auto;
+	column-gap: 0;
+}

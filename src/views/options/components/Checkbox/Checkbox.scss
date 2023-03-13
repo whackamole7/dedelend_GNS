@@ -1,0 +1,78 @@
+.GMX-Interface {
+  .Checkbox {
+    user-select: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+  
+  .Checkbox.disabled {
+    cursor: default;
+    pointer-events: none;
+  }
+  
+  .Checkbox-icon-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    overflow: hidden;
+  }
+  .Checkbox-icon-wrapper svg {
+    border-radius: 3px;
+    background-color: #384263;
+    z-index: 1;
+  }
+  .Checkbox-icon-wrapper::before {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    right: 2px;
+    top: 50%;
+    transform: translate(0, calc(-50% + 15px));
+    opacity: 0;
+    display: block;
+    flex-shrink: 0;
+    width: 14px;
+    height: 10px;
+    background-image: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2213%22%20height%3D%2210%22%20viewBox%3D%220%200%2013%2010%22%20fill%3D%22none%22%3E%0A%3Cpath%20d%3D%22M10.9792%200.31882C11.2039%200.112066%2011.5028%20-0.0022356%2011.813%203.31386e-05C12.1232%200.00230188%2012.4203%200.120964%2012.6417%200.33098C12.8631%200.540997%2012.9914%200.825941%2012.9996%201.12569C13.0078%201.42543%2012.8952%201.71653%2012.6856%201.93756L6.32264%209.63046C6.21323%209.74438%206.08117%209.83581%205.93437%209.89927C5.78757%209.96273%205.62904%209.99692%205.46826%209.9998C5.30748%2010.0027%205.14775%209.97418%204.99862%209.91602C4.8495%209.85786%204.71403%209.77122%204.60033%209.66129L0.380675%205.58205C0.263165%205.4762%200.168913%205.34855%200.103542%205.20672C0.0381707%205.06489%200.00301963%204.91178%200.000186137%204.75653C-0.00264735%204.60128%200.0268948%204.44707%200.0870496%204.30309C0.147204%204.15912%200.23674%204.02834%200.350315%203.91854C0.463889%203.80875%200.599176%203.72219%200.748105%203.66404C0.897034%203.60588%201.05655%203.57732%201.21715%203.58006C1.37774%203.5828%201.53612%203.61678%201.68283%203.67998C1.82955%203.74318%201.96159%203.83429%202.07109%203.94789L5.41045%207.17459L10.9489%200.352737C10.9589%200.340868%2010.968%200.329544%2010.9792%200.31882Z%22%20fill%3D%22%236988FF%22%2F%3E%0A%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    transition: transform .2s ease, opacity .2s ease;
+  }
+  
+  .Checkbox.selected .Checkbox-icon-wrapper::before {
+    transform: translate(0, -50%);
+    opacity: 1;
+  }
+  
+  .Checkbox .Checkbox-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 1.25rem;
+    color: #384263;
+    margin-bottom: 0;
+  }
+  
+  .Checkbox.disabled .Checkbox-icon {
+    /* color: #47509e; */
+  }
+  
+  .Checkbox-icon.inactive {
+    background-color: #384263;
+    border-radius: 3px;
+  }
+  
+  .Checkbox-label, .Checkbox-label .font-sm {
+    display: inline-block;
+    color: #384263;
+    opacity: 1;
+    vertical-align: middle;
+    font-size: 17px;
+    line-height: calc(22.1/17);
+
+    @media (max-width: 480px) {
+      font-size: 15px;
+      line-height: calc(19.5/15);
+    }
+  }
+  
+}

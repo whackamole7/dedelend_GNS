@@ -8,7 +8,6 @@ import { UserStatsContext } from '../context/context';
 import { ethers } from 'ethers';
 import GMXInterface from '../views/gmx-test/App/App';
 import { connectWallet } from './utils/wallet';
-import MarginAccount from '../views/MarginAccount';
 import { HOMEPAGE_HREF } from './utils/constants';
 
 
@@ -33,7 +32,15 @@ const AppRouter = ({ walletAddress, setWalletAddress, setRegisterVisible, accoun
 	
 	return (
 		<Routes>
-			<Route path="/terminal" element={
+			<Route path="/perpetuals" element={
+				<GMXInterface
+					connectWallet={() => {
+						connectWallet(setWalletAddress)
+					}}
+					walletAddress={walletAddress} 
+					setRegisterVisible={setRegisterVisible} />
+			} />
+			<Route path="/options" element={
 				<GMXInterface
 					connectWallet={() => {
 						connectWallet(setWalletAddress)
