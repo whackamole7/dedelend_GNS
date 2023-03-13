@@ -526,10 +526,10 @@ function FullApp(props) {
 }
 
 function GMXInterface(props) {
-  /* useEffect(() => {
-    const defaultLanguage = localStorage.getItem(LANGUAGE_LOCALSTORAGE_KEY) || defaultLocale;
+  useEffect(() => {
+    const defaultLanguage = defaultLocale;
     dynamicActivate(defaultLanguage);
-  }, []); */
+  }, []);
 
   return (
     <SWRConfig value={{ refreshInterval: 5000 }}>
