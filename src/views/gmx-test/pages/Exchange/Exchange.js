@@ -440,8 +440,10 @@ export const Exchange = forwardRef((props, ref) => {
     defaultTokenSelection
   );
 
-
+  
+  
   const [swapOption, setSwapOption] = useLocalStorageByChainId(chainId, "Swap-option-v2", LONG);
+  console.log(tokenSelection);
 
   const fromTokenAddress = tokenSelection[swapOption].from;
   const toTokenAddress = tokenSelection[swapOption].to;

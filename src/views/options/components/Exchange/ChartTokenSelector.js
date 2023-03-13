@@ -9,24 +9,14 @@ import { LONG, SHORT, SWAP } from "../../lib/legacy";
 import { ethers } from 'ethers';
 
 export default function ChartTokenSelector(props) {
-  const { chainId, selectedToken, onSelectToken, swapOption } = props;
-
-  const isLong = swapOption === LONG;
-  const isShort = swapOption === SHORT;
-  const isSwap = swapOption === SWAP;
+  const { chainId, selectedToken, onSelectToken } = props;
 
   let options = getTokens(chainId);
   const whitelistedTokens = getWhitelistedTokens(chainId);
 
-  const indexTokens = whitelistedTokens.filter((token) => !token.isStable && !token.isWrapped);
-  const shortableTokens = indexTokens.filter((token) => token.isShortable);
+  const indexTokens = whitelistedTokens.filter((token) => !token.isStable && !token.isWrapped && (token.symbol === 'ETH' || token.symbol === 'BTC'));
 
-  if (isLong) {
-    options = indexTokens;
-  }
-  if (isShort) {
-    options = shortableTokens;
-  }
+  options = indexTokens;
 
   const onSelect = async (token) => {
     onSelectToken(token);
@@ -40,18 +30,15 @@ export default function ChartTokenSelector(props) {
 
   return (
     <Menu>
-      <Menu.Button as="div" disabled={isSwap}>
-        <button className={cx("App-cta small transparent chart-token-selector", { "default-cursor": isSwap /* "default-cursor": "default" */ })}>
+      <Menu.Button as="div">
+        <button className={cx("App-cta small transparent chart-token-selector")}>
           <div className="chart-token-selector--name">
             <img src={icon} className="chart-token-selector--icon" alt={value.symbol + ' icon'} />
             <span className="chart-token-selector--current">{value.symbol}/USD</span>
           </div>
-          
-          {!isSwap && (
-            <svg className="chevron-down" xmlns="http://www.w3.org/2000/svg" width="20" height="21" viewBox="0 0 20 21" fill="none">
-              <path d="M4 8L10 13L16 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          )}
+          <svg className="chevron-down" xmlns="http://www.w3.org/2000/svg" width="20" height="21" viewBox="0 0 20 21" fill="none">
+            <path d="M4 8L10 13L16 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </button>
       </Menu.Button>
       <div className="chart-token-menu">

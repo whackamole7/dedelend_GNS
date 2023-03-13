@@ -27,38 +27,6 @@ const PRICE_LINE_TEXT_WIDTH = 15;
 
 const timezoneOffset = -new Date().getTimezoneOffset() * 60;
 
-export function getChartToken(swapOption, fromToken, toToken, chainId) {
-  if (!fromToken || !toToken) {
-    return;
-  }
-
-  if (swapOption !== SWAP) {
-    return toToken;
-  }
-
-  if (fromToken.isUsdg && toToken.isUsdg) {
-    return getTokens(chainId).find((t) => t.isStable);
-  }
-  if (fromToken.isUsdg) {
-    return toToken;
-  }
-  if (toToken.isUsdg) {
-    return fromToken;
-  }
-
-  if (fromToken.isStable && toToken.isStable) {
-    return toToken;
-  }
-  if (fromToken.isStable) {
-    return toToken;
-  }
-  if (toToken.isStable) {
-    return fromToken;
-  }
-
-  return toToken;
-}
-
 const DEFAULT_PERIOD = "4h";
 
 const RED_COLOR = "#C75E4B";
@@ -129,15 +97,10 @@ const getChartOptions = (width, height) => ({
 
 export default function ExchangeTVChart(props) {
   const {
-    swapOption,
-    fromTokenAddress,
-    toTokenAddress,
     infoTokens,
     chainId,
-    positions,
-    savedShouldShowPositionLines,
-    orders,
-    setToTokenAddress,
+    tokenSelection,
+    setTokenSelection,
   } = props;
   const [currentChart, setCurrentChart] = useState();
   const [currentSeries, setCurrentSeries] = useState();
@@ -149,38 +112,18 @@ export default function ExchangeTVChart(props) {
 
   const [hoveredCandlestick, setHoveredCandlestick] = useState();
 
-  const fromToken = getTokenInfo(infoTokens, fromTokenAddress);
-  const toToken = getTokenInfo(infoTokens, toTokenAddress);
-
   const [chartToken, setChartToken] = useState({
     maxPrice: null,
     minPrice: null,
   });
   useEffect(() => {
-    const tmp = getChartToken(swapOption, fromToken, toToken, chainId);
+    const tmp = getTokenInfo(infoTokens, tokenSelection);
     setChartToken(tmp);
-  }, [swapOption, fromToken, toToken, chainId]);
+  }, [tokenSelection]);
 
   const symbol = chartToken ? (chartToken.isWrapped ? chartToken.baseSymbol : chartToken.symbol) : undefined;
   const marketName = chartToken ? symbol + "_USD" : undefined;
   const previousMarketName = usePrevious(marketName);
-
-  const currentOrders = useMemo(() => {
-    if (swapOption === SWAP || !chartToken) {
-      return [];
-    }
-
-    return orders.filter((order) => {
-      if (order.type === SWAP) {
-        // we can't show non-stable to non-stable swap orders with existing charts
-        // so to avoid users confusion we'll show only long/short orders
-        return false;
-      }
-
-      const indexToken = getToken(chainId, order.indexToken);
-      return order.indexToken === chartToken.address || (chartToken.isNative && indexToken.isWrapped);
-    });
-  }, [orders, chartToken, swapOption, chainId]);
 
   const ref = useRef(null);
   const chartRef = useRef(null);
@@ -279,63 +222,6 @@ export default function ExchangeTVChart(props) {
     }
   }, [priceData, currentSeries, chartInited, scaleChart]);
 
-  useEffect(() => {
-    const lines = [];
-    if (currentSeries && savedShouldShowPositionLines) {
-      if (currentOrders && currentOrders.length > 0) {
-        currentOrders.forEach((order) => {
-          const indexToken = getToken(chainId, order.indexToken);
-          let tokenSymbol;
-          if (indexToken && indexToken.symbol) {
-            tokenSymbol = indexToken.isWrapped ? indexToken.baseSymbol : indexToken.symbol;
-          }
-          const title = `${order.type === INCREASE ? "Inc." : "Dec."} ${tokenSymbol} ${
-            order.isLong ? "Long" : "Short"
-          }`;
-          const color = "#3a3e5e";
-          /* lines.push(
-            currentSeries.createPriceLine({
-              price: parseFloat(formatAmount(order.triggerPrice, USD_DECIMALS, 2)),
-              color,
-              title: title.padEnd(PRICE_LINE_TEXT_WIDTH, " "),
-            })
-          ); */
-        });
-      }
-      if (positions && positions.length > 0) {
-        const color = "#3a3e5e";
-
-        positions.forEach((position) => {
-          /* lines.push(
-            currentSeries.createPriceLine({
-              price: parseFloat(formatAmount(position.averagePrice, USD_DECIMALS, 2)),
-              color,
-              title: `Open ${position.indexToken.symbol} ${position.isLong ? "Long" : "Short"}`.padEnd(
-                PRICE_LINE_TEXT_WIDTH,
-                " "
-              ),
-            })
-          ); */
-
-          const liquidationPrice = getLiquidationPrice(position);
-          /* lines.push(
-            currentSeries.createPriceLine({
-              price: parseFloat(formatAmount(liquidationPrice, USD_DECIMALS, 2)),
-              color,
-              title: `Liq. ${position.indexToken.symbol} ${position.isLong ? "Long" : "Short"}`.padEnd(
-                PRICE_LINE_TEXT_WIDTH,
-                " "
-              ),
-            })
-          ); */
-        });
-      }
-    }
-    return () => {
-      lines.forEach((line) => currentSeries.removePriceLine(line));
-    };
-  }, [currentOrders, positions, currentSeries, chainId, savedShouldShowPositionLines]);
-
   const candleStatsHtml = useMemo(() => {
     if (!priceData) {
       return null;
@@ -423,7 +309,7 @@ export default function ExchangeTVChart(props) {
   const onSelectToken = (token) => {
     const tmp = getTokenInfo(infoTokens, token.address);
     setChartToken(tmp);
-    setToTokenAddress(swapOption, token.address);
+    setTokenSelection(token.address);
   };
 
   return (
@@ -435,7 +321,6 @@ export default function ExchangeTVChart(props) {
               <ChartTokenSelector
                 chainId={chainId}
                 selectedToken={chartToken}
-                swapOption={swapOption}
                 infoTokens={infoTokens}
                 onSelectToken={onSelectToken}
                 className="chart-token-selector pos-relative"

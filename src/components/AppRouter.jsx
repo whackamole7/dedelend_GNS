@@ -9,9 +9,10 @@ import { ethers } from 'ethers';
 import GMXInterface from '../views/gmx-test/App/App';
 import { connectWallet } from './utils/wallet';
 import { HOMEPAGE_HREF } from './utils/constants';
+import Options from './../views/options/App/App';
 
 
-const AppRouter = ({ walletAddress, setWalletAddress, setRegisterVisible, account }) => {
+const AppRouter = ({ walletAddress, setWalletAddress, account }) => {
 	// Supply Market state
 	const {userStats} = useContext(UserStatsContext)
 	const [supplyStep, setSupplyStep] = useState(0)
@@ -37,16 +38,14 @@ const AppRouter = ({ walletAddress, setWalletAddress, setRegisterVisible, accoun
 					connectWallet={() => {
 						connectWallet(setWalletAddress)
 					}}
-					walletAddress={walletAddress} 
-					setRegisterVisible={setRegisterVisible} />
+					walletAddress={walletAddress} />
 			} />
 			<Route path="/options" element={
-				<GMXInterface
+				<Options
 					connectWallet={() => {
 						connectWallet(setWalletAddress)
 					}}
-					walletAddress={walletAddress} 
-					setRegisterVisible={setRegisterVisible} />
+					walletAddress={walletAddress} />
 			} />
 			<Route
 				path="*"

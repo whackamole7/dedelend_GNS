@@ -202,8 +202,12 @@ const Header = (props) => {
 	const loc = useLocation();
 	const headerLinks = [
 		{
-			name: 'Unified Trading Terminal',
-			to: '/terminal',
+			name: 'Perpetuals',
+			to: '/perpetuals',
+		},
+		{
+			name: 'Options',
+			to: '/options',
 		},
 		{
 			name: 'Borrow USDC',
@@ -223,17 +227,14 @@ const Header = (props) => {
 					<Logo />
 					<Tabs className='header__links' links={headerLinks} />
 				</div>
-
-				<div className="Account-data">
-					{walletAddress ?
-						<Wallet address={walletAddress} 
-							setAddress={setWalletAddress}
-						/>
-						:
-						<Button isMain={true} onClick={(e) => {
-							connectWallet(setWalletAddress)
-						}}>Connect wallet</Button>}
-				</div>
+				{walletAddress ?
+					<Wallet address={walletAddress} 
+						setAddress={setWalletAddress}
+					/>
+					:
+					<Button isMain={true} onClick={(e) => {
+						connectWallet(setWalletAddress)
+					}}>Connect wallet</Button>}
 			</div>
 		</header>
 	);

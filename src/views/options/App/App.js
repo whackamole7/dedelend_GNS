@@ -525,7 +525,7 @@ function FullApp(props) {
   );
 }
 
-function GMXInterface(props) {
+function Options(props) {
   useEffect(() => {
     const defaultLanguage = defaultLocale;
     dynamicActivate(defaultLanguage);
@@ -544,4 +544,4 @@ function GMXInterface(props) {
   );
 }
 
-export default GMXInterface;
+export default Options;
